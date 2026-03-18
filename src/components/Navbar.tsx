@@ -67,6 +67,11 @@ export const Navbar = () => {
 
   const navItems = [
     { label: 'Find Services', path: '/search', icon: <Search fontSize="small" /> },
+    { label: 'Cities', path: '/cities', icon: <HomeIcon fontSize="small" /> },
+    { label: 'About', path: '/about', icon: <LayoutGrid fontSize="small" /> },
+    { label: 'Contact', path: '/contact', icon: <MessageSquare fontSize="small" /> },
+    { label: 'Privacy', path: '/privacy', icon: <SettingsIcon fontSize="small" /> },
+    { label: 'Terms', path: '/terms', icon: <SettingsIcon fontSize="small" /> },
   ];
 
   if (user) {

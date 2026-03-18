@@ -17,7 +17,7 @@ export const AdminPanel = () => {
   // Admin can still act on disputes/reports which reference bookings when necessary
   // const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [siteSettings, setSiteSettings] = useState<any>({ siteTitle: 'Home Serv', commissionPercent: 10, categories: [] });
+  const [siteSettings, setSiteSettings] = useState<any>({ siteTitle: 'Home Serv', commissionPercent: 10, categories: [], timelineStages: ['Requested','Accepted','In Progress','Review','Completed'], requireMutualApproval: false });
 
   useEffect(() => {
     if (profile?.role !== 'admin') return;
@@ -395,6 +395,17 @@ export const AdminPanel = () => {
               <div className="mt-4">
                 <label className="block text-sm font-bold mb-2">Categories (comma separated)</label>
                 <input value={(siteSettings.categories || []).join(', ')} onChange={(e) => setSiteSettings({ ...siteSettings, categories: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) })} className="w-full p-3 bg-zinc-50 border border-zinc-100 rounded-xl" />
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-bold mb-2">Service Timeline Stages (comma separated)</label>
+                <input value={(siteSettings.timelineStages || []).join(', ')} onChange={(e) => setSiteSettings({ ...siteSettings, timelineStages: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) })} className="w-full p-3 bg-zinc-50 border border-zinc-100 rounded-xl" />
+                <p className="text-xs text-zinc-400 mt-2">Example: Requested, Accepted, In Progress, Review, Completed</p>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <input id="mutual" type="checkbox" checked={!!siteSettings.requireMutualApproval} onChange={(e) => setSiteSettings({ ...siteSettings, requireMutualApproval: e.target.checked })} />
+                <label htmlFor="mutual" className="text-sm">Require mutual approval from both customer and provider to mark booking as completed</label>
               </div>
 
               <div className="flex gap-3 mt-4">

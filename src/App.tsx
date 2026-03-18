@@ -10,6 +10,13 @@ import { Bookings } from './pages/Bookings';
 import { Dashboard } from './pages/Dashboard';
 import { Messages } from './pages/Messages';
 import { AdminPanel } from './pages/AdminPanel';
+import { About } from './pages/About';
+import { Contact } from './pages/Contact';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { Terms } from './pages/Terms';
+import { Cities } from './pages/Cities';
+import { Cookies } from './pages/Cookies';
+import { Process } from './pages/Process';
 import { AdminRoute } from './components/AdminRoute';
 import { ProviderSection } from './pages/ProviderSection';
 import { ProviderServices } from './pages/ProviderServices';
@@ -41,6 +48,13 @@ export default function App() {
                 <Route index element={<Home />} />
                 <Route path="auth" element={<Auth />} />
                 <Route path="search" element={<Search />} />
+                <Route path="about" element={<About />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="privacy" element={<PrivacyPolicy />} />
+                <Route path="terms" element={<Terms />} />
+                <Route path="cities" element={<Cities />} />
+                <Route path="cookies" element={<Cookies />} />
+                <Route path="process" element={<Process />} />
                 <Route path="provider/:id" element={<ProviderProfile />} />
                 
                 {/* Protected Routes */}
