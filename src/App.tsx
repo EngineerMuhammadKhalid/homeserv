@@ -78,6 +78,8 @@ export default function App() {
                     <Settings />
                   </ProtectedRoute>
                 } />
+                {/* Redirect unknown paths to home to avoid blank pages on direct navigations */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>
           </BrowserRouter>
