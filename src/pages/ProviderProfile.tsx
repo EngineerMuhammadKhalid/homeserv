@@ -80,9 +80,9 @@ export const ProviderProfile = () => {
     };
     fetchReviews().catch(console.error);
 
-    // fetch wallet balance for provider owner view
+    // Only fetch wallet balance if viewing own wallet (privacy)
     const fetchWallet = async () => {
-      if (!id) return;
+      if (!id || !user || id !== user.uid) return;
       try {
         const wq = query(collection(db, 'wallets'), where('userId', '==', id), limit(1));
         const wsnap = await getDocs(wq);
@@ -134,10 +134,13 @@ export const ProviderProfile = () => {
         setBookingStatus('idle');
         return;
       }
+      // Use provider ID + category as service identifier
+      const serviceCategory = provider?.categories?.[0] || 'General Service';
       await addDoc(collection(db, 'bookings'), {
         customerId: user.uid,
         providerId: id,
-        serviceId: provider.categories[0], // Simplified
+        serviceId: `${id}-${serviceCategory}`, // Unique service identifier
+        serviceCategory: serviceCategory,
         bookingDate,
         bookingTime,
         paymentMethod,
@@ -146,7 +149,7 @@ export const ProviderProfile = () => {
         address,
         serviceImages,
         status: 'pending',
-        totalAmount: provider.hourlyRate,
+        totalAmount: provider?.hourlyRate || 0,
         createdAt: new Date().toISOString(),
       });
       setBookingStatus('success');
