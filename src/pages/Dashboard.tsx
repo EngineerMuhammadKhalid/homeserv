@@ -154,12 +154,14 @@ export const Dashboard = () => {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard 
-            icon={<DollarSign size={24} />} 
-            label="Total Earnings" 
-            value={`Rs. ${stats.totalEarnings}`} 
-            color={theme.palette.success.main} 
-          />
+          {profile.role === 'provider' && (
+            <StatCard 
+              icon={<DollarSign size={24} />} 
+              label="Total Earnings" 
+              value={`Rs. ${stats.totalEarnings}`} 
+              color={theme.palette.success.main} 
+            />
+          )}
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard 
