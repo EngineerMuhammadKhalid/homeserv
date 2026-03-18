@@ -214,7 +214,7 @@ export const Home = () => {
                     boxShadow: theme.shadows[4],
                     transform: 'translateY(-4px)'
                   } 
-                }}>
+                }} onClick={() => navigate(`/search?category=${encodeURIComponent(cat.name)}`)}>
                   <CardContent sx={{ p: 3 }}>
                     <Typography variant="h3" sx={{ mb: 2 }}>{cat.icon}</Typography>
                     <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>{cat.name}</Typography>

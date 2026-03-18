@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
+import { query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -48,6 +49,10 @@ export const ProviderProfile = () => {
   const theme = useTheme();
   const [provider, setProvider] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [myRating, setMyRating] = useState<number | null>(null);
+  const [myComment, setMyComment] = useState('');
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('portal');
@@ -67,6 +72,30 @@ export const ProviderProfile = () => {
       setLoading(false);
     };
     fetchProvider();
+    // fetch reviews
+    const fetchReviews = async () => {
+      if (!id) return;
+      const q = query(collection(db, 'reviews'), where('subjectId', '==', id), orderBy('createdAt', 'desc'));
+      const snap = await getDocs(q);
+      setReviews(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    };
+    fetchReviews().catch(console.error);
+
+    // fetch wallet balance for provider owner view
+    const fetchWallet = async () => {
+      if (!id) return;
+      try {
+        const wq = query(collection(db, 'wallets'), where('userId', '==', id), limit(1));
+        const wsnap = await getDocs(wq);
+        if (!wsnap.empty) {
+          const w = wsnap.docs[0].data();
+          setWalletBalance(w.balance || 0);
+        }
+      } catch (err) {
+        console.error('Wallet fetch error', err);
+      }
+    };
+    fetchWallet().catch(console.error);
   }, [id]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,23 +270,77 @@ export const ProviderProfile = () => {
             <Paper sx={{ p: 4, borderRadius: 6, border: '1px solid', borderColor: 'divider' }}>
               <Typography variant="h5" fontWeight={800} sx={{ mb: 4 }}>Reviews</Typography>
               <Stack spacing={4} divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
-                {[1, 2].map(i => (
-                  <Box key={i}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: 'grey.100', color: 'text.secondary' }}>C</Avatar>
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={800}>Customer {i}</Typography>
-                          <Typography variant="caption" color="text.secondary">2 weeks ago</Typography>
+                  {reviews.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">No reviews yet. Be the first to review this provider.</Typography>
+                  )}
+                  {reviews.map((r) => (
+                    <Box key={r.id}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar sx={{ bgcolor: 'grey.100', color: 'text.secondary' }}>{(r.reviewerName || 'U').charAt(0)}</Avatar>
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={800}>{r.reviewerName || 'Customer'}</Typography>
+                            <Typography variant="caption" color="text.secondary">{new Date(r.createdAt).toLocaleDateString()}</Typography>
+                          </Box>
                         </Box>
+                        <Rating value={Number(r.rating)} readOnly size="small" />
                       </Box>
-                      <Rating value={5} readOnly size="small" />
+                      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                        {r.comment}
+                      </Typography>
                     </Box>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                      Excellent service! Very professional and arrived on time. Highly recommended for any plumbing issues.
-                    </Typography>
-                  </Box>
-                ))}
+                  ))}
+                  {/* Review form for logged-in customers who are not the provider */}
+                  {user && profile?.role === 'customer' && user.uid !== id && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>Leave a review</Typography>
+                      <Rating value={myRating || 0} onChange={(_, val) => setMyRating(val)} />
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        placeholder="Share your experience..."
+                        value={myComment}
+                        onChange={(e) => setMyComment(e.target.value)}
+                        sx={{ mt: 2 }}
+                      />
+                      <Button
+                        variant="contained"
+                        sx={{ mt: 2 }}
+                        onClick={async () => {
+                          if (!myRating) return alert('Please provide a rating');
+                          try {
+                            await addDoc(collection(db, 'reviews'), {
+                              subjectId: id,
+                              subjectType: 'provider',
+                              reviewerId: user.uid,
+                              reviewerName: profile.name || profile.email || 'Customer',
+                              rating: myRating,
+                              comment: myComment,
+                              createdAt: new Date().toISOString()
+                            });
+                            // refresh reviews
+                            const q = query(collection(db, 'reviews'), where('subjectId', '==', id), orderBy('createdAt', 'desc'));
+                            const snap = await getDocs(q);
+                            const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                            setReviews(all);
+
+                            // update provider aggregate: rating & reviewCount
+                            const avg = all.reduce((s, x) => s + Number(x.rating || 0), 0) / (all.length || 1);
+                            await setDoc(doc(db, 'service_providers', id), { rating: Number(avg.toFixed(1)), reviewCount: all.length }, { merge: true });
+
+                            setMyRating(null);
+                            setMyComment('');
+                          } catch (err) {
+                            console.error('Error submitting review', err);
+                            alert('Failed to submit review');
+                          }
+                        }}
+                      >
+                        Submit Review
+                      </Button>
+                    </Box>
+                  )}
               </Stack>
             </Paper>
           </Stack>
