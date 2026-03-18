@@ -161,8 +161,17 @@ export const Navbar = () => {
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={handleOpenUserMenu}>
                     <Box sx={{ textAlign: 'right' }}>
-                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, lineHeight: 1 }}>
+                      <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end', fontWeight: 700, lineHeight: 1 }}>
                         {profile?.name || 'User'}
+                        {profile?.verificationStatus === 'verified' ? (
+                          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'success.main', fontSize: '0.65rem', fontWeight: 800 }}>
+                            <ShieldCheck style={{ width: 12, height: 12 }} /> Verified
+                          </Box>
+                        ) : (
+                          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.65rem', fontWeight: 700 }}>
+                            Not verified
+                          </Box>
+                        )}
                       </Typography>
                       {profile?.username && (
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>

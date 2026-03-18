@@ -122,6 +122,23 @@ export const Dashboard = () => {
           </Typography>
         </Box>
         
+        <Box>
+          {profile.verificationStatus === 'verified' ? (
+            <Chip 
+              icon={<ShieldCheck size={18} />} 
+              label="Verified" 
+              color="success" 
+              sx={{ fontWeight: 700, borderRadius: 2 }}
+            />
+          ) : (
+            <Chip 
+              label="Not verified" 
+              color="warning" 
+              sx={{ fontWeight: 700, borderRadius: 2 }}
+            />
+          )}
+        </Box>
+
         {profile.role === 'provider' && (
           <Box>
             {profile.verificationStatus === 'verified' ? (
