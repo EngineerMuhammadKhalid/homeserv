@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
+import { SERVICES_LIST } from '../data/services';
 import { 
   Box, 
   Container, 
@@ -51,11 +52,14 @@ export const Layout = () => {
             <Grid size={{ xs: 6, md: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', mb: 4, display: 'block' }}>Services</Typography>
               <Stack spacing={2}>
-                {['Plumbing', 'Electrical', 'Cleaning', 'Carpentry'].map(item => (
+                {SERVICES_LIST.slice(0, 8).map(item => (
                   <Link key={item} href={`/search?category=${item}`} underline="none" color="text.secondary" sx={{ fontSize: '0.875rem', fontWeight: 500, '&:hover': { color: 'text.primary' } }}>
                     {item}
                   </Link>
                 ))}
+                <Link href="/search" underline="none" color="text.secondary" sx={{ fontSize: '0.875rem', fontWeight: 600, '&:hover': { color: 'text.primary' } }}>
+                  View All →
+                </Link>
               </Stack>
             </Grid>
             
