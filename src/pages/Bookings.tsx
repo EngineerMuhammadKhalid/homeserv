@@ -24,7 +24,10 @@ import {
   Badge,
   Skeleton,
   Tooltip,
-  CircularProgress
+  CircularProgress,
+  Modal,
+  Fade,
+  Backdrop
 } from '@mui/material';
 import { 
   CalendarMonth as Calendar, 
@@ -40,12 +43,15 @@ import {
   CreditCard, 
   ErrorOutline as AlertCircle, 
   Shield as ShieldAlert,
-  MoreVert as MoreIcon
+  MoreVert as MoreIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { PaymentModal } from '../components/PaymentModal';
+import { BookingTimeline } from '../components/BookingTimeline';
+import { generateInvoicePDF } from '../utils/generatePDF';
 
 import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
 
@@ -60,6 +66,7 @@ export const Bookings = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
+  const [selectedBookingForDetail, setSelectedBookingForDetail] = useState<any>(null);
 
   useEffect(() => {
     if (!user || !profile) return;
@@ -355,8 +362,9 @@ export const Bookings = () => {
                 border: '1px solid', 
                 borderColor: 'divider',
                 transition: 'all 0.3s',
-                '&:hover': { boxShadow: theme.shadows[4] }
-              }}>
+                '&:hover': { boxShadow: theme.shadows[4] },
+                cursor: 'pointer'
+              }} onClick={() => setSelectedBookingForDetail(booking)}>
                 <CardContent sx={{ p: 3 }}>
                   <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 8 }}>
@@ -681,6 +689,67 @@ export const Bookings = () => {
           }}
         />
       )}
+
+      {/* Booking Timeline Detail Modal */}
+      <Modal
+        open={!!selectedBookingForDetail}
+        onClose={() => setSelectedBookingForDetail(null)}
+        closeAfterTransition
+        components={{ Backdrop: Backdrop }}
+        componentsProps={{ backdrop: { timeout: 500 } }}
+      >
+        <Fade in={!!selectedBookingForDetail}>
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '95%', sm: '90%', md: 700 },
+            maxHeight: '90vh',
+            bgcolor: 'background.paper',
+            borderRadius: 4,
+            boxShadow: theme.shadows[24],
+            p: 4,
+            overflow: 'auto'
+          }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight={800}>
+                Booking Details
+              </Typography>
+              <IconButton onClick={() => setSelectedBookingForDetail(null)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            
+            {selectedBookingForDetail && (
+              <>
+                <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                  <Typography variant="body2" fontWeight={700} mb={1}>
+                    {selectedBookingForDetail.serviceId}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Amount: Rs. {selectedBookingForDetail.totalAmount}
+                  </Typography>
+                </Box>
+                
+                <BookingTimeline
+                  booking={selectedBookingForDetail}
+                  isProvider={profile?.role === 'provider'}
+                  invoice={invoices.find(inv => inv.bookingId === selectedBookingForDetail.id)}
+                  onStatusChange={(bookingId, newStatus) => {
+                    // Update the local state with the new booking data
+                    const updatedBooking = bookings.find(b => b.id === bookingId);
+                    if (updatedBooking) {
+                      setSelectedBookingForDetail({ ...updatedBooking, status: newStatus });
+                    }
+                  }}
+                />
+              </>
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </Container>
   );
 };
+
