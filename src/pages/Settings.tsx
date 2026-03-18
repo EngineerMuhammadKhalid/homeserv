@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
 import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { SERVICES_LIST } from '../data/services';
 
 export const Settings = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -285,7 +286,37 @@ export const Settings = () => {
         {/* Provider Specific Sections */}
         {profile?.role === 'provider' && providerData && (
           <>
-            {/* Portfolio Section */}
+            {/* Services Section */}
+            <section className="bg-white p-8 rounded-3xl border border-black/5 shadow-sm">
+              <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                <Briefcase size={20} className="text-emerald-600" />
+                Services You Provide
+              </h2>
+              <p className="text-sm text-zinc-500 mb-4">Select all the services you offer to help customers find you easily.</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {SERVICES_LIST.map(service => (
+                  <button
+                    key={service}
+                    onClick={() => {
+                      const current = providerData.services || [];
+                      const updated = current.includes(service)
+                        ? current.filter((s: string) => s !== service)
+                        : [...current, service];
+                      setProviderData({ ...providerData, services: updated });
+                    }}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                      (providerData.services || []).includes(service)
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-zinc-50 text-zinc-700 border border-zinc-100 hover:bg-zinc-100'
+                    }`}
+                  >
+                    {service}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Service Area / Address Section */}
             <section className="bg-white p-8 rounded-3xl border border-black/5 shadow-sm">
               <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
                 <MapPin size={20} className="text-emerald-600" />

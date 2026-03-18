@@ -134,8 +134,8 @@ export const ProviderProfile = () => {
         setBookingStatus('idle');
         return;
       }
-      // Use provider ID + category as service identifier
-      const serviceCategory = provider?.categories?.[0] || 'General Service';
+      // Use provider ID + first service as service identifier
+      const serviceCategory = (provider?.services?.[0] || provider?.categories?.[0]) || 'General Service';
       await addDoc(collection(db, 'bookings'), {
         customerId: user.uid,
         providerId: id,

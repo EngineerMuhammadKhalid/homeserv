@@ -230,7 +230,7 @@ export const AdminPanel = () => {
                         </td>
                         <td className="py-4">
                           <div className="flex gap-1">
-                            {p.categories?.slice(0, 2).map((c: string) => (
+                            {(p.services || p.categories || []).slice(0, 2).map((c: string) => (
                               <span key={c} className="text-[10px] bg-zinc-100 px-2 py-0.5 rounded text-zinc-600">{c}</span>
                             ))}
                           </div>
