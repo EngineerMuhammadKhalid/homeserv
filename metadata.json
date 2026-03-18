@@ -1,0 +1,7 @@
+{
+  "name": "HomeServ",
+  "description": "A comprehensive marketplace connecting local service providers with customers for home-based services like plumbing, electrical work, and cleaning.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -1,0 +1,263 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Core user profile information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the user" },
+        "username": { "type": "string", "description": "Unique username for the user" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "role": { "type": "string", "enum": ["customer", "provider", "admin"], "description": "User role" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "address": { "type": "string", "description": "Physical address" },
+        "verificationStatus": { "type": "string", "enum": ["unverified", "pending", "verified", "rejected"], "description": "Verification status" },
+        "verificationDetails": { "type": "object", "description": "ID documents, etc." },
+        "latitude": { "type": "number", "description": "Latitude for location-based search" },
+        "longitude": { "type": "number", "description": "Longitude for location-based search" },
+        "profilePhoto": { "type": "string", "description": "URL to profile photo" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
+      },
+      "required": ["name", "email", "role"]
+    },
+    "ServiceProvider": {
+      "title": "Service Provider",
+      "description": "Extended profile for service providers",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Reference to the User ID" },
+        "bio": { "type": "string", "description": "Provider biography" },
+        "hourlyRate": { "type": "number", "description": "Hourly rate in local currency" },
+        "experienceYears": { "type": "integer", "description": "Years of experience" },
+        "verificationStatus": { "type": "string", "enum": ["unverified", "pending", "verified", "rejected"], "description": "Admin verification status" },
+        "verificationDocuments": { "type": "array", "items": { "type": "string" }, "description": "URLs to ID/Certificates" },
+        "availabilityStatus": { "type": "boolean", "description": "Whether the provider is currently taking bookings" },
+        "categories": { "type": "array", "items": { "type": "string" }, "description": "List of service categories offered" },
+        "rating": { "type": "number", "description": "Average rating" },
+        "reviewCount": { "type": "integer", "description": "Total number of reviews" },
+        "portfolio": { "type": "array", "items": { "type": "string" }, "description": "List of portfolio image URLs" },
+        "skills": { "type": "array", "items": { "type": "string" }, "description": "List of specific skills" },
+        "languages": { "type": "array", "items": { "type": "string" }, "description": "Languages spoken" },
+        "profilePhoto": { "type": "string", "description": "URL to profile photo" },
+        "address": { "type": "string", "description": "Provider's primary service area/address" },
+        "payoutMethods": {
+          "type": "object",
+          "properties": {
+            "easypaisa": { "type": "string" },
+            "jazzcash": { "type": "string" },
+            "bank": {
+              "type": "object",
+              "properties": {
+                "bankName": { "type": "string" },
+                "accountName": { "type": "string" },
+                "accountNumber": { "type": "string" },
+                "iban": { "type": "string" }
+              }
+            }
+          },
+          "description": "Connected payout accounts"
+        },
+        "faqs": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "answer": { "type": "string" }
+            }
+          },
+          "description": "Frequently Asked Questions"
+        }
+      },
+      "required": ["userId", "hourlyRate", "categories"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Specific service gig offered by a provider",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the service gig" },
+        "description": { "type": "string", "description": "Detailed description" },
+        "category": { "type": "string", "description": "Service category" },
+        "price": { "type": "number", "description": "Starting price" },
+        "duration": { "type": "string", "description": "Estimated duration" },
+        "imageUrl": { "type": "string", "description": "URL to cover image" },
+        "providerId": { "type": "string", "description": "ID of the provider offering this service" },
+        "providerName": { "type": "string", "description": "Name of the provider" },
+        "rating": { "type": "number", "description": "Average rating for this specific service" },
+        "reviewCount": { "type": "integer", "description": "Total reviews for this service" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "description", "category", "price", "providerId"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Service booking record",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string", "description": "ID of the customer" },
+        "providerId": { "type": "string", "description": "ID of the provider" },
+        "serviceId": { "type": "string", "description": "ID of the service" },
+        "bookingDate": { "type": "string", "format": "date", "description": "Date of service" },
+        "bookingTime": { "type": "string", "description": "Time slot" },
+        "address": { "type": "string", "description": "Service location" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "completed", "cancelled", "disputed", "revision_requested"], "description": "Booking status" },
+        "paymentMethod": { "type": "string", "enum": ["portal", "easypaisa", "jazzcash", "bank"], "description": "Selected payment method" },
+        "escrowStatus": { "type": "string", "enum": ["none", "held", "released", "refunded"], "description": "Escrow status" },
+        "totalAmount": { "type": "number", "description": "Total cost" },
+        "commissionAmount": { "type": "number", "description": "Platform fee" },
+        "providerEarnings": { "type": "number", "description": "Amount provider will receive" },
+        "specialInstructions": { "type": "string", "description": "Customer notes" },
+        "workDetails": { "type": "string", "description": "Detailed description of work" },
+        "deadline": { "type": "string", "format": "date-time", "description": "Project deadline" },
+        "serviceImages": { "type": "array", "items": { "type": "string" }, "description": "Images of service required" },
+        "milestones": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "status": { "type": "string", "enum": ["pending", "completed"] },
+              "date": { "type": "string", "format": "date-time" }
+            }
+          },
+          "description": "Project milestones"
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Booking creation timestamp" }
+      },
+      "required": ["customerId", "providerId", "serviceId", "bookingDate", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer review of a service",
+      "type": "object",
+      "properties": {
+        "bookingId": { "type": "string", "description": "ID of the booking" },
+        "customerId": { "type": "string", "description": "ID of the customer" },
+        "providerId": { "type": "string", "description": "ID of the provider" },
+        "rating": { "type": "integer", "description": "Rating out of 5" },
+        "comment": { "type": "string", "description": "Written review" },
+        "images": { "type": "array", "items": { "type": "string" }, "description": "Review photos" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Review timestamp" }
+      },
+      "required": ["bookingId", "customerId", "providerId", "rating"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "In-app chat message",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string", "description": "ID of the sender" },
+        "receiverId": { "type": "string", "description": "ID of the receiver" },
+        "participants": { "type": "array", "items": { "type": "string" }, "description": "List of participant UIDs" },
+        "bookingId": { "type": "string", "description": "Optional booking context" },
+        "content": { "type": "string", "description": "Message text" },
+        "readStatus": { "type": "boolean", "description": "Whether the message has been read" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Message timestamp" }
+      },
+      "required": ["senderId", "receiverId", "content", "participants"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Billing record for a service",
+      "type": "object",
+      "properties": {
+        "bookingId": { "type": "string", "description": "Reference to the booking" },
+        "customerId": { "type": "string", "description": "ID of the customer" },
+        "providerId": { "type": "string", "description": "ID of the provider" },
+        "amount": { "type": "number", "description": "Total amount due" },
+        "status": { "type": "string", "enum": ["pending", "paid", "cancelled"], "description": "Payment status" },
+        "dueDate": { "type": "string", "format": "date-time", "description": "Payment deadline" },
+        "items": { "type": "array", "items": { "type": "object" }, "description": "Line items" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Invoice creation timestamp" }
+      },
+      "required": ["bookingId", "customerId", "providerId", "amount", "status"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Transaction record",
+      "type": "object",
+      "properties": {
+        "invoiceId": { "type": "string", "description": "Reference to the invoice" },
+        "customerId": { "type": "string", "description": "ID of the customer" },
+        "providerId": { "type": "string", "description": "ID of the provider" },
+        "amount": { "type": "number", "description": "Amount paid" },
+        "method": { "type": "string", "description": "Payment method" },
+        "transactionId": { "type": "string", "description": "External transaction reference" },
+        "status": { "type": "string", "enum": ["success", "failed", "pending"], "description": "Transaction status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Payment timestamp" }
+      },
+      "required": ["invoiceId", "customerId", "providerId", "amount", "status"]
+    },
+    "Dispute": {
+      "title": "Dispute",
+      "description": "Conflict resolution record",
+      "type": "object",
+      "properties": {
+        "bookingId": { "type": "string", "description": "Reference to the booking" },
+        "raisedBy": { "type": "string", "description": "UID of the user who raised the dispute" },
+        "reason": { "type": "string", "description": "Reason for dispute" },
+        "status": { "type": "string", "enum": ["open", "under_review", "resolved_refunded", "resolved_released"], "description": "Dispute status" },
+        "adminNotes": { "type": "string", "description": "Notes from the centralized body" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Dispute timestamp" }
+      },
+      "required": ["bookingId", "raisedBy", "reason", "status"]
+    },
+    "Wallet": {
+      "title": "Wallet",
+      "description": "User financial balance",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the wallet" },
+        "balance": { "type": "number", "description": "Current available balance" },
+        "pendingBalance": { "type": "number", "description": "Amount in escrow" },
+        "totalEarned": { "type": "number", "description": "Lifetime earnings" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update" }
+      },
+      "required": ["userId", "balance"]
+    },
+    "WithdrawalRequest": {
+      "title": "Withdrawal Request",
+      "description": "Provider request to withdraw funds",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the provider" },
+        "amount": { "type": "number", "description": "Amount to withdraw" },
+        "method": { "type": "string", "enum": ["easypaisa", "jazzcash", "bank"], "description": "Withdrawal method" },
+        "details": { "type": "string", "description": "Account details (number, bank name, etc.)" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"], "description": "Request status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Request timestamp" }
+      },
+      "required": ["userId", "amount", "method", "details", "status"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "User report record",
+      "type": "object",
+      "properties": {
+        "reporterId": { "type": "string", "description": "UID of the reporter" },
+        "reportedId": { "type": "string", "description": "UID of the reported user" },
+        "bookingId": { "type": "string", "description": "Optional booking reference" },
+        "reason": { "type": "string", "description": "Reason for report" },
+        "details": { "type": "string", "description": "Additional details" },
+        "status": { "type": "string", "enum": ["pending", "resolved", "dismissed"], "description": "Report status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Report timestamp" }
+      },
+      "required": ["reporterId", "reportedId", "reason", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/service_providers/{providerId}": { "schema": "ServiceProvider", "description": "Provider details" },
+    "/services/{serviceId}": { "schema": "Service", "description": "Service categories" },
+    "/bookings/{bookingId}": { "schema": "Booking", "description": "Bookings" },
+    "/reviews/{reviewId}": { "schema": "Review", "description": "Reviews" },
+    "/messages/{messageId}": { "schema": "Message", "description": "Chat messages" },
+    "/invoices/{invoiceId}": { "schema": "Invoice", "description": "Service invoices" },
+    "/payments/{paymentId}": { "schema": "Payment", "description": "Financial transactions" },
+    "/disputes/{disputeId}": { "schema": "Dispute", "description": "Conflict resolution" },
+    "/wallets/{walletId}": { "schema": "Wallet", "description": "Financial balances" },
+    "/withdrawal_requests/{requestId}": { "schema": "WithdrawalRequest", "description": "Withdrawal requests" },
+    "/reports/{reportId}": { "schema": "Report", "description": "User reports" }
+  }
+}
