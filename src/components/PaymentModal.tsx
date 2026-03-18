@@ -15,7 +15,7 @@ interface PaymentModalProps {
 export const PaymentModal = ({ isOpen, onClose, invoice, onSuccess }: PaymentModalProps) => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'details' | 'processing' | 'success'>('details');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'easypaisa' | 'jazzcash' | 'bank'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'easypaisa' | 'jazzcash' | 'bank' | 'wallet'>('card');
 
   const handlePayment = async () => {
     setLoading(true);
@@ -152,6 +152,15 @@ export const PaymentModal = ({ isOpen, onClose, invoice, onSuccess }: PaymentMod
                     >
                       <DollarSign size={20} />
                       <span className="text-[10px] font-bold">Bank Transfer</span>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('wallet')}
+                      className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${
+                        paymentMethod === 'wallet' ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-zinc-100 text-zinc-400 hover:border-zinc-200'
+                      }`}
+                    >
+                      <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-[8px] text-white font-bold">W</div>
+                      <span className="text-[10px] font-bold">Wallet</span>
                     </button>
                   </div>
                 </div>

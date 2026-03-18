@@ -476,6 +476,7 @@ export const ProviderProfile = () => {
                     <MenuItem value="easypaisa">EasyPaisa</MenuItem>
                     <MenuItem value="jazzcash">JazzCash</MenuItem>
                     <MenuItem value="bank">Bank Transfer</MenuItem>
+                    <MenuItem value="wallet">Wallet</MenuItem>
                   </Select>
                 </FormControl>
 

@@ -16,7 +16,7 @@ export const WithdrawalModal = ({ isOpen, onClose, userId, balance }: Withdrawal
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [amount, setAmount] = useState<string>('');
-  const [method, setMethod] = useState<'easypaisa' | 'jazzcash' | 'bank'>('easypaisa');
+  const [method, setMethod] = useState<'easypaisa' | 'jazzcash' | 'bank' | 'wallet'>('easypaisa');
   const [details, setDetails] = useState('');
 
   useEffect(() => {
@@ -32,6 +32,8 @@ export const WithdrawalModal = ({ isOpen, onClose, userId, balance }: Withdrawal
                 setDetails(methods.easypaisa);
               } else if (method === 'jazzcash' && methods.jazzcash) {
                 setDetails(methods.jazzcash);
+              } else if (method === 'wallet') {
+                setDetails('Direct wallet transfer to your HomeServ account');
               } else if (method === 'bank' && methods.bank) {
                 const bank = methods.bank;
                 setDetails(`${bank.bankName || ''} - ${bank.accountName || ''}\nAcc: ${bank.accountNumber || ''}\nIBAN: ${bank.iban || ''}`);
@@ -131,8 +133,8 @@ export const WithdrawalModal = ({ isOpen, onClose, userId, balance }: Withdrawal
 
               <div>
                 <label className="block text-sm font-bold text-zinc-900 mb-2">Withdrawal Method</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['easypaisa', 'jazzcash', 'bank'].map((m) => (
+                <div className="grid grid-cols-4 gap-2">
+                  {['easypaisa', 'jazzcash', 'bank', 'wallet'].map((m) => (
                     <button
                       key={m}
                       type="button"

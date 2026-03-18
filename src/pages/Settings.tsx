@@ -341,6 +341,11 @@ export const Settings = () => {
               <p className="text-xs text-zinc-500 mb-6">Connect your accounts to receive payments. These details will be used for your withdrawal requests.</p>
               
               <div className="space-y-6">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-2xl border border-purple-200">
+                  <p className="text-xs font-bold text-purple-900 uppercase mb-2">💜 Wallet (HomeServ)</p>
+                  <p className="text-xs text-purple-700">Your funds are automatically added to your HomeServ wallet. No additional setup needed - withdraw anytime!</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-bold text-zinc-900 mb-2">EasyPaisa Number</label>
