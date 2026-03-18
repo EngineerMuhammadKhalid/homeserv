@@ -10,6 +10,7 @@ import { Bookings } from './pages/Bookings';
 import { Dashboard } from './pages/Dashboard';
 import { Messages } from './pages/Messages';
 import { AdminPanel } from './pages/AdminPanel';
+import { AdminRoute } from './components/AdminRoute';
 import { ProviderSection } from './pages/ProviderSection';
 import { ProviderServices } from './pages/ProviderServices';
 import { Settings } from './pages/Settings';
@@ -59,9 +60,9 @@ export default function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="admin" element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <AdminPanel />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 } />
                 <Route path="provider-section" element={
                   <ProtectedRoute>

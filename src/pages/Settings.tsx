@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { storage } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { User, Camera, Plus, Trash2, Save, Briefcase, HelpCircle, MapPin, CreditCard } from 'lucide-react';
 import { motion } from 'motion/react';
 import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
 import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export const Settings = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -80,13 +82,20 @@ export const Settings = () => {
 
   const handleVerificationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setVerificationDocs(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file || !user) return;
+    // Upload immediately to Firebase Storage and store URL
+    (async () => {
+      try {
+        const path = `verifications/${user.uid}/${Date.now()}_${file.name}`;
+        const ref = storageRef(storage, path);
+        const snapshot = await uploadBytes(ref, file);
+        const url = await getDownloadURL(snapshot.ref);
+        setVerificationDocs(prev => [...prev, url]);
+      } catch (err) {
+        console.error('Upload error', err);
+        alert('Failed to upload document: ' + (err as any).message);
+      }
+    })();
   };
 
   const removePortfolioItem = (idx: number) => {
@@ -144,13 +153,13 @@ export const Settings = () => {
       const docRef = await addDoc(collection(db, 'verifications'), {
         userId: user.uid,
         type: profile?.role || 'customer',
-        documents: verificationDocs,
+        documentUrl: verificationDocs,
         status: 'pending',
         submittedAt: new Date().toISOString()
       });
       // mark user as pending locally in users collection
       await updateDoc(doc(db, 'users', user.uid), { verificationStatus: 'pending' });
-      setVerificationRequest({ id: docRef.id, userId: user.uid, type: profile?.role || 'customer', documents: verificationDocs, status: 'pending', submittedAt: new Date().toISOString() });
+      setVerificationRequest({ id: docRef.id, userId: user.uid, type: profile?.role || 'customer', documentUrl: verificationDocs, status: 'pending', submittedAt: new Date().toISOString() });
       alert('Verification request submitted. An admin will review your documents.');
     } catch (err) {
       console.error('Verification submit error', err);

@@ -1,6 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import fileConfig from '../firebase-applet-config.json';
 
 // Build config from Vite env vars (Vercel will provide these) with fallback
@@ -27,3 +28,4 @@ export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+export const storage = getStorage(app);

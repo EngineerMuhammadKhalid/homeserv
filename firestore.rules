@@ -84,14 +84,16 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      // Owners may update their profile but cannot set verificationStatus to 'verified' (only admins can)
+      allow update: if (isOwner(userId) && !(request.resource.data.verificationStatus == 'verified' && !isAdmin())) || isAdmin();
     }
 
     // Service Providers
     match /service_providers/{providerId} {
       allow read: if true;
       allow create: if isOwner(providerId) && isValidServiceProvider(request.resource.data);
-      allow update: if (isOwner(providerId) && isValidServiceProvider(request.resource.data)) || isAdmin();
+      // Owners may update provider details but cannot set verificationStatus to 'verified' (only admins can)
+      allow update: if ((isOwner(providerId) && isValidServiceProvider(request.resource.data) && !(request.resource.data.verificationStatus == 'verified' && !isAdmin())) || isAdmin());
     }
 
     // Services
@@ -185,6 +187,23 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
       allow create: if isAuthenticated() && isValidWithdrawalRequest(request.resource.data);
       allow update: if isAdmin();
+    }
+
+    // Verifications
+    match /verifications/{verifId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      // Users may create their own verification request; documents must be an array of urls and initial status must be 'pending'
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.documentUrl is list;
+      // Only admins can update verification records (approve/reject)
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Admin actions log
+    match /admin_actions/{actionId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
     }
   }
 }

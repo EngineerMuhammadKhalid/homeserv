@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
-import { collection, query, getDocs, doc, updateDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, orderBy, limit, addDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { Users, ShieldCheck, AlertCircle, CheckCircle, XCircle, BarChart3, Settings, Search, ShieldAlert } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const AdminPanel = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'providers' | 'disputes' | 'reports' | 'categories'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'providers' | 'disputes' | 'reports' | 'categories' | 'verifications' | 'complaints' | 'system'>('overview');
   const [users, setUsers] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [verifications, setVerifications] = useState<any[]>([]);
+  // Do not fetch or expose bookings list to admins here to protect user privacy
+  // Admin can still act on disputes/reports which reference bookings when necessary
+  // const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [siteSettings, setSiteSettings] = useState<any>({ siteTitle: 'Home Serv', commissionPercent: 10, categories: [] });
 
   useEffect(() => {
     if (profile?.role !== 'admin') return;
@@ -33,8 +37,21 @@ export const AdminPanel = () => {
         const reportsSnap = await getDocs(collection(db, 'reports'));
         setReports(reportsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        const bookingsSnap = await getDocs(collection(db, 'bookings'));
-        setBookings(bookingsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const verifSnap = await getDocs(collection(db, 'verifications'));
+        setVerifications(verifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // load site settings (if present)
+        try {
+          const settingsRef = doc(db, 'settings', 'site');
+          const settingsSnap = await getDoc(settingsRef);
+          if (settingsSnap.exists()) {
+            setSiteSettings(settingsSnap.data());
+          }
+        } catch (e) {
+          // ignore if missing
+        }
+
+        // intentionally do not fetch bookings for privacy
       } catch (err) {
         console.error('Admin Fetch Error:', err);
       }
@@ -99,8 +116,18 @@ export const AdminPanel = () => {
     }
   };
 
-  const totalCommission = bookings.reduce((acc, b) => acc + (b.commissionAmount || 0), 0);
-  const totalVolume = bookings.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+  const saveSiteSettings = async () => {
+    try {
+      await setDoc(doc(db, 'settings', 'site'), siteSettings, { merge: true });
+      await addDoc(collection(db, 'admin_actions'), { action: 'update_site_settings', adminId: profile?.uid || 'system', createdAt: serverTimestamp() });
+      alert('Site settings saved');
+    } catch (err) {
+      console.error('Failed to save site settings', err);
+      alert('Failed to save settings: ' + (err as any).message);
+    }
+  };
+
+  // Do not compute or display booking-level financials here for privacy
 
   if (profile?.role !== 'admin') {
     return <div className="p-20 text-center text-red-600 font-bold">Access Denied. Admin only.</div>;
@@ -115,8 +142,10 @@ export const AdminPanel = () => {
           <AdminTab active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<BarChart3 size={18} />} label="Overview" />
           <AdminTab active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={<Users size={18} />} label="User Management" />
           <AdminTab active={activeTab === 'providers'} onClick={() => setActiveTab('providers')} icon={<ShieldCheck size={18} />} label="Provider Verification" />
+          <AdminTab active={activeTab === 'verifications'} onClick={() => setActiveTab('verifications')} icon={<ShieldCheck size={18} />} label="Verifications" />
           <AdminTab active={activeTab === 'disputes'} onClick={() => setActiveTab('disputes')} icon={<AlertCircle size={18} />} label="Dispute Resolution" />
           <AdminTab active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} icon={<ShieldAlert size={18} />} label="User Reports" />
+          <AdminTab active={activeTab === 'complaints'} onClick={() => setActiveTab('complaints')} icon={<AlertCircle size={18} />} label="Complaints" />
           <AdminTab active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} icon={<Settings size={18} />} label="System Settings" />
         </aside>
 
@@ -135,11 +164,11 @@ export const AdminPanel = () => {
                 </div>
                 <div className="bg-zinc-50 p-6 rounded-2xl border border-zinc-100">
                   <p className="text-zinc-400 text-sm font-medium mb-1">Commission Earned</p>
-                  <p className="text-3xl font-bold text-emerald-600">Rs. {totalCommission.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-emerald-600">—</p>
                 </div>
                 <div className="bg-zinc-50 p-6 rounded-2xl border border-zinc-100">
                   <p className="text-zinc-400 text-sm font-medium mb-1">Total Volume</p>
-                  <p className="text-3xl font-bold text-zinc-900">Rs. {totalVolume.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-zinc-900">—</p>
                 </div>
               </div>
               
@@ -236,6 +265,141 @@ export const AdminPanel = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'verifications' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-zinc-900">Verifications Queue</h3>
+                <p className="text-sm text-zinc-500">Approve or reject verification requests for users and providers.</p>
+              </div>
+
+              <div className="space-y-4">
+                {verifications.length === 0 ? (
+                  <div className="text-center py-10 text-zinc-400">No verification requests.</div>
+                ) : (
+                  verifications.map(v => (
+                    <div key={v.id} className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="font-bold text-zinc-900">Request #{v.id.slice(0,8)}</p>
+                          <p className="text-xs text-zinc-500">Requester: {v.userId} • Type: {v.type || 'user'}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                          v.status === 'pending' ? 'bg-amber-50 text-amber-600' : v.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                        }`}>
+                          {v.status || 'pending'}
+                        </span>
+                      </div>
+
+                      <div className="mb-4">
+                        <p className="text-sm font-bold text-zinc-900">Notes</p>
+                        <p className="text-sm text-zinc-600">{v.notes || 'No additional notes.'}</p>
+                        {v.documentUrl && (
+                          <div className="mt-3">
+                            <a href={v.documentUrl} target="_blank" rel="noreferrer" className="text-emerald-600 underline">View Document</a>
+                          </div>
+                        )}
+                      </div>
+
+                      {v.status === 'pending' && (
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await updateDoc(doc(db, 'verifications', v.id), { status: 'approved', reviewedAt: serverTimestamp() });
+                                // update user/provider record
+                                await updateDoc(doc(db, v.type === 'provider' ? 'service_providers' : 'users', v.userId), { verificationStatus: 'verified' });
+                                await addDoc(collection(db, 'admin_actions'), { action: 'approve_verification', targetId: v.userId, verificationId: v.id, adminId: profile?.uid || 'system', createdAt: serverTimestamp() });
+                                setVerifications(prev => prev.map(x => x.id === v.id ? { ...x, status: 'approved' } : x));
+                              } catch (err) { console.error(err); }
+                            }}
+                            className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await updateDoc(doc(db, 'verifications', v.id), { status: 'rejected', reviewedAt: serverTimestamp() });
+                                await updateDoc(doc(db, v.type === 'provider' ? 'service_providers' : 'users', v.userId), { verificationStatus: 'rejected' });
+                                await addDoc(collection(db, 'admin_actions'), { action: 'reject_verification', targetId: v.userId, verificationId: v.id, adminId: profile?.uid || 'system', createdAt: serverTimestamp() });
+                                setVerifications(prev => prev.map(x => x.id === v.id ? { ...x, status: 'rejected' } : x));
+                              } catch (err) { console.error(err); }
+                            }}
+                            className="flex-1 bg-red-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-red-700 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'complaints' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-zinc-900">Complaints & Escalations</h3>
+              <p className="text-sm text-zinc-500">Combined view of user reports and disputes for streamlined handling.</p>
+
+              <div className="space-y-4 mt-4">
+                {reports.concat(disputes).length === 0 ? (
+                  <div className="text-center py-10 text-zinc-400">No complaints or disputes.</div>
+                ) : (
+                  reports.concat(disputes).map((item: any) => (
+                    <div key={item.id} className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="font-bold text-zinc-900">#{item.id.slice(0,8)} {item.bookingId ? '(Dispute)' : '(Report)'}</p>
+                          <p className="text-xs text-zinc-500">Involved: {item.reportedId || item.customerId || item.providerId}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                          item.status === 'pending' || item.status === 'open' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-700 mb-4">{item.reason || item.details}</p>
+                      <div className="flex gap-3">
+                        <button onClick={() => handleResolveReport(item.id, 'resolved')} className="bg-emerald-600 text-white py-2 px-4 rounded-xl">Resolve</button>
+                        <button onClick={() => handleResolveReport(item.id, 'dismissed')} className="bg-zinc-400 text-white py-2 px-4 rounded-xl">Dismiss</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'categories' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-zinc-900">System Settings</h3>
+              <p className="text-sm text-zinc-500">Manage global settings such as site title, commission rate and category list.</p>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Site Title</label>
+                  <input value={siteSettings.siteTitle || ''} onChange={(e) => setSiteSettings({ ...siteSettings, siteTitle: e.target.value })} className="w-full p-3 bg-zinc-50 border border-zinc-100 rounded-xl" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Commission (%)</label>
+                  <input type="number" value={siteSettings.commissionPercent || 0} onChange={(e) => setSiteSettings({ ...siteSettings, commissionPercent: Number(e.target.value) })} className="w-full p-3 bg-zinc-50 border border-zinc-100 rounded-xl" />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-bold mb-2">Categories (comma separated)</label>
+                <input value={(siteSettings.categories || []).join(', ')} onChange={(e) => setSiteSettings({ ...siteSettings, categories: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) })} className="w-full p-3 bg-zinc-50 border border-zinc-100 rounded-xl" />
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <button onClick={saveSiteSettings} className="bg-emerald-600 text-white px-6 py-2 rounded-xl">Save Settings</button>
+                <button onClick={() => { setSiteSettings({ siteTitle: 'Home Serv', commissionPercent: 10, categories: [] }); }} className="bg-zinc-50 px-6 py-2 rounded-xl">Reset</button>
               </div>
             </div>
           )}
