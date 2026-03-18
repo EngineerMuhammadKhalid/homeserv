@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext';
 import { User, Camera, Plus, Trash2, Save, Briefcase, HelpCircle, MapPin, CreditCard } from 'lucide-react';
 import { motion } from 'motion/react';
 import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 export const Settings = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -14,6 +15,9 @@ export const Settings = () => {
   const [providerData, setProviderData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
+  const [verificationDocs, setVerificationDocs] = useState<string[]>([]);
+  const [verificationRequest, setVerificationRequest] = useState<any | null>(null);
+  const [isSubmittingVerification, setIsSubmittingVerification] = useState(false);
 
   useEffect(() => {
     if (user && profile?.role === 'provider') {
@@ -25,6 +29,26 @@ export const Settings = () => {
           }
         } catch (err) {
           console.error(err);
+
+        useEffect(() => {
+          // fetch any existing verification request by this user
+          if (!user) return;
+          const fetchRequest = async () => {
+            try {
+              const q = query(collection(db, 'verifications'), where('userId', '==', user.uid));
+              const snap = await getDocs(q);
+              if (!snap.empty) {
+                const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // pick the latest request
+                docs.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+                setVerificationRequest(docs[0]);
+              }
+            } catch (err) {
+              console.error('Failed to fetch verification request', err);
+            }
+          };
+          fetchRequest();
+        }, [user]);
         }
       };
       fetchProviderData();
@@ -49,6 +73,17 @@ export const Settings = () => {
       reader.onloadend = () => {
         const newPortfolio = [...(providerData.portfolio || []), reader.result as string];
         setProviderData({ ...providerData, portfolio: newPortfolio });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVerificationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVerificationDocs(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     }
@@ -99,6 +134,29 @@ export const Settings = () => {
       handleFirestoreError(err, OperationType.UPDATE, 'users');
     }
     setIsSaving(false);
+  };
+
+  const submitVerificationRequest = async () => {
+    if (!user) return alert('You must be signed in to request verification');
+    if (verificationDocs.length === 0) return alert('Please upload at least one document');
+    setIsSubmittingVerification(true);
+    try {
+      const docRef = await addDoc(collection(db, 'verifications'), {
+        userId: user.uid,
+        type: profile?.role || 'customer',
+        documents: verificationDocs,
+        status: 'pending',
+        submittedAt: new Date().toISOString()
+      });
+      // mark user as pending locally in users collection
+      await updateDoc(doc(db, 'users', user.uid), { verificationStatus: 'pending' });
+      setVerificationRequest({ id: docRef.id, userId: user.uid, type: profile?.role || 'customer', documents: verificationDocs, status: 'pending', submittedAt: new Date().toISOString() });
+      alert('Verification request submitted. An admin will review your documents.');
+    } catch (err) {
+      console.error('Verification submit error', err);
+      alert('Failed to submit verification request: ' + (err as any).message);
+    }
+    setIsSubmittingVerification(false);
   };
 
   return (
@@ -175,6 +233,44 @@ export const Settings = () => {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Verification Request Section */}
+        <section className="bg-white p-8 rounded-3xl border border-black/5 shadow-sm">
+          <h2 className="text-xl font-bold text-zinc-900 mb-4">Account Verification</h2>
+          <p className="text-sm text-zinc-500 mb-4">Verify your identity to get the verified badge. Upload a government ID or business documents.</p>
+
+          {verificationRequest ? (
+            <div className="space-y-3">
+              <p className="text-sm font-bold">Request Status: <span className="font-normal">{verificationRequest.status}</span></p>
+              <div className="flex gap-2 flex-wrap">
+                {verificationRequest.documents?.map((d: string, i: number) => (
+                  <img key={i} src={d} alt={`doc-${i}`} className="w-28 h-20 object-cover rounded-md border" referrerPolicy="no-referrer" />
+                ))}
+              </div>
+              {verificationRequest.status === 'rejected' && (
+                <p className="text-sm text-red-600">Your request was rejected. Please upload clearer documents and resubmit.</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-zinc-900 mb-2">Upload Documents</label>
+                <input type="file" accept="image/*,application/pdf" onChange={handleVerificationUpload} />
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {verificationDocs.map((d, idx) => (
+                    <img key={idx} src={d} alt={`doc-${idx}`} className="w-28 h-20 object-cover rounded-md border" referrerPolicy="no-referrer" />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={submitVerificationRequest} className="bg-emerald-600 text-white px-5 py-2 rounded-xl font-bold" disabled={isSubmittingVerification}>
+                  {isSubmittingVerification ? 'Submitting...' : 'Request Verification'}
+                </button>
+                <button onClick={() => setVerificationDocs([])} className="bg-zinc-50 px-5 py-2 rounded-xl">Clear</button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Provider Specific Sections */}

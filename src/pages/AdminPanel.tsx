@@ -59,6 +59,18 @@ export const AdminPanel = () => {
     }
   };
 
+  const handleVerifyUser = async (userId: string, status: 'verified' | 'rejected') => {
+    try {
+      await updateDoc(doc(db, 'users', userId), { verificationStatus: status });
+      // if user is also a provider, update provider record
+      const providerRef = doc(db, 'service_providers', userId);
+      try { await updateDoc(providerRef, { verificationStatus: status }); } catch (e) { /* ignore if not a provider */ }
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, verificationStatus: status } : u));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleResolveDispute = async (disputeId: string, bookingId: string, resolution: 'resolved_refunded' | 'resolved_released') => {
     try {
       const bookingRef = doc(db, 'bookings', bookingId);
@@ -213,6 +225,73 @@ export const AdminPanel = () => {
                             </button>
                             <button 
                               onClick={() => handleVerifyProvider(p.id, 'rejected')}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Reject"
+                            >
+                              <XCircle size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'users' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-zinc-900">User Management</h3>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                  <input type="text" placeholder="Search users..." className="pl-10 pr-4 py-2 bg-zinc-50 border border-zinc-100 rounded-xl text-sm outline-none" />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-zinc-400 text-xs uppercase tracking-wider border-b border-black/5">
+                      <th className="pb-4 font-bold">User</th>
+                      <th className="pb-4 font-bold">Email</th>
+                      <th className="pb-4 font-bold">Status</th>
+                      <th className="pb-4 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/5">
+                    {users.map(u => (
+                      <tr key={u.id} className="group hover:bg-zinc-50/50 transition-colors">
+                        <td className="py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-zinc-200"></div>
+                            <div>
+                              <p className="font-bold text-sm text-zinc-900">{u.name || u.id.slice(0,8)}</p>
+                              <p className="text-xs text-zinc-500">Role: {u.role || 'customer'}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4">{u.email}</td>
+                        <td className="py-4">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${
+                            u.verificationStatus === 'verified' ? 'bg-emerald-50 text-emerald-600' : 
+                            u.verificationStatus === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {u.verificationStatus || 'none'}
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button 
+                              onClick={() => handleVerifyUser(u.id, 'verified')}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                              title="Verify"
+                            >
+                              <CheckCircle size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleVerifyUser(u.id, 'rejected')}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="Reject"
                             >
