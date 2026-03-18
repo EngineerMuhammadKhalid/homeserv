@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
-import { query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, setDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -349,10 +348,10 @@ export const ProviderProfile = () => {
 
                             setMyRating(null);
                             setMyComment('');
-                          } catch (err) {
-                            console.error('Error submitting review', err);
-                            alert('Failed to submit review');
-                          }
+                          } catch (err: any) {
+                          console.error('Error submitting review', err);
+                          alert('Failed to submit review: ' + (err?.message || err));
+                        }
                         }}
                       >
                         Submit Review
