@@ -52,7 +52,7 @@ export const Layout = () => {
               <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', mb: 4, display: 'block' }}>Services</Typography>
               <Stack spacing={2}>
                 {['Plumbing', 'Electrical', 'Cleaning', 'Carpentry'].map(item => (
-                  <Link key={item} href="#" underline="none" color="text.secondary" sx={{ fontSize: '0.875rem', fontWeight: 500, '&:hover': { color: 'text.primary' } }}>
+                  <Link key={item} href={`/search?category=${item}`} underline="none" color="text.secondary" sx={{ fontSize: '0.875rem', fontWeight: 500, '&:hover': { color: 'text.primary' } }}>
                     {item}
                   </Link>
                 ))}
