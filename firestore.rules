@@ -59,8 +59,9 @@ service cloud.firestore {
     }
 
     function isValidPayment(data) {
-      return data.keys().hasAll(['invoiceId', 'customerId', 'providerId', 'amount', 'status']) &&
+      return data.keys().hasAll(['invoiceId', 'customerId', 'providerId', 'amount', 'method', 'status']) &&
              data.amount is number && data.amount >= 0 &&
+             data.method in ['card', 'easypaisa', 'jazzcash', 'bank', 'wallet'] &&
              data.status in ['success', 'failed', 'pending'];
     }
 
@@ -76,7 +77,7 @@ service cloud.firestore {
       return data.keys().hasAll(['userId', 'amount', 'method', 'details', 'status']) &&
              data.userId == request.auth.uid &&
              data.amount is number && data.amount > 0 &&
-             data.method in ['easypaisa', 'jazzcash', 'bank'] &&
+             data.method in ['easypaisa', 'jazzcash', 'bank', 'wallet'] &&
              data.status == 'pending';
     }
 
