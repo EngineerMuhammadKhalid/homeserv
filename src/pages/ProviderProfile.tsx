@@ -112,11 +112,29 @@ export const ProviderProfile = () => {
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
+      // Clearer feedback: inform user they must sign in first
+      alert('Please sign in or create an account to request a booking.');
       navigate('/auth');
       return;
     }
     setBookingStatus('loading');
     try {
+      // Client-side validation with clear alerts
+      if (!bookingDate) {
+        alert('Please select a booking date.');
+        setBookingStatus('idle');
+        return;
+      }
+      if (!bookingTime) {
+        alert('Please select a booking time.');
+        setBookingStatus('idle');
+        return;
+      }
+      if (!address) {
+        alert('Please enter the service address.');
+        setBookingStatus('idle');
+        return;
+      }
       await addDoc(collection(db, 'bookings'), {
         customerId: user.uid,
         providerId: id,
