@@ -71,7 +71,8 @@ export const Search = () => {
         
         for (const docSnap of querySnapshot.docs) {
           const data = docSnap.data();
-          providerData.push({ id: docSnap.id, ...data, name: 'Provider ' + docSnap.id.slice(0, 4) });
+          // Use stored name when available; fall back to a short-id placeholder
+          providerData.push({ id: docSnap.id, ...data, name: data.name || ('Provider ' + docSnap.id.slice(0, 4)) });
         }
 
         // Client-side filtering for location since Firestore doesn't support partial string matching easily without external tools
