@@ -1,6 +1,6 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import fileConfig from '../firebase-applet-config.json';
 
@@ -29,3 +29,17 @@ setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
 export const storage = getStorage(app);
+
+// If running locally against the Firestore emulator, connect when requested.
+// Use environment variables in your shell or .env: VITE_USE_FIRESTORE_EMULATOR=true and VITE_FIRESTORE_EMULATOR_PORT=8080
+try {
+	const useEmu = (env.VITE_USE_FIRESTORE_EMULATOR || 'false') === 'true';
+	const port = Number(env.VITE_FIRESTORE_EMULATOR_PORT || '8080');
+	if (useEmu) {
+		// connect to local emulator
+		connectFirestoreEmulator(db, 'localhost', port);
+		console.info(`Connected Firestore to emulator at localhost:${port}, databaseId=${(firebaseConfig as any).firestoreDatabaseId}`);
+	}
+} catch (e) {
+	console.warn('Failed to connect to Firestore emulator:', e);
+}
