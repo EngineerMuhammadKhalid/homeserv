@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, addDoc, increment } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, addDoc, increment, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -82,7 +82,29 @@ export const Bookings = () => {
 
     const unsubscribeBookings = onSnapshot(qBookings, (snapshot) => {
       const bookingData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setBookings(bookingData);
+      // Enrich bookings with counterpart user name for display
+      (async () => {
+        try {
+          const enriched = await Promise.all(bookingData.map(async (b) => {
+            const otherId = profile?.role === 'provider' ? b.customerId : b.providerId;
+            if (!otherId) return { ...b, otherName: null };
+            try {
+              const u = await getDoc(doc(db, 'users', otherId));
+              if (u.exists()) {
+                const d: any = u.data();
+                return { ...b, otherName: d.name || d.displayName || d.email || otherId.slice(0, 8) };
+              }
+            } catch (err) {
+              console.error('Failed to fetch user for booking', err);
+            }
+            return { ...b, otherName: otherId.slice(0, 8) };
+          }));
+          setBookings(enriched);
+        } catch (err) {
+          console.error('Error enriching bookings', err);
+          setBookings(bookingData);
+        }
+      })();
       setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'bookings');
