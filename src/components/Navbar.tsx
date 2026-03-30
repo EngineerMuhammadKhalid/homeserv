@@ -2,19 +2,49 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { auth } from '../firebase';
-      </Drawer>
-  CalendarMonth as Calendar, 
-  Message as MessageSquare, 
-  Person as User, 
-  Logout as LogOut, 
-  Menu as MenuIcon, 
-  Close as X, 
-  AdminPanelSettings as ShieldCheck, 
-  Work as Briefcase, 
-  GridView as LayoutGrid, 
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Box,
+  Container,
+  Avatar,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Divider,
+  Stack,
+  useTheme,
+  alpha,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from '@mui/material';
+import {
+  Search,
+  CalendarMonth as Calendar,
+  Message as MessageSquare,
+  Person as User,
+  Logout as LogOut,
+  Menu as MenuIcon,
+  Close as X,
+  AdminPanelSettings as ShieldCheck,
+  Work as Briefcase,
+  GridView as LayoutGrid,
   Settings as SettingsIcon,
   Home as HomeIcon
 } from '@mui/icons-material';
+import VerificationBadge from './VerificationBadge';
+import { useCurrency } from '../context/CurrencyContext';
 
 export const Navbar = () => {
   const { user, profile } = useAuth();
@@ -268,34 +298,6 @@ export const Navbar = () => {
       >
         {drawer}
       </Drawer>
-          {/* Currency Selector (rendered last so it appears on the right) */}
-          <FormControl size="small" sx={{ minWidth: 56, mr: 2, display: { xs: 'none', md: 'flex' } }}>
-            <InputLabel id="currency-select-label">Currency</InputLabel>
-            <Select
-              labelId="currency-select-label"
-              value={currency}
-              label="Currency"
-              onChange={async (e) => {
-                const c = e.target.value as any;
-                try { setCurrency(c); } catch (err) { console.error('Currency set failed', err); }
-                // Persist to user profile if available (best-effort)
-                try {
-                  if (user) {
-                    const { updateDoc, doc } = await import('firebase/firestore');
-                    const { db } = await import('../firebase');
-                    await updateDoc(doc(db, 'users', user.uid), { currency: c });
-                  }
-                } catch (err) {
-                  console.error('Failed to save currency', err);
-                }
-              }}
-              size="small"
-              sx={{ bgcolor: 'background.paper', borderRadius: 1, minWidth: 56 }}
-            >
-              <MenuItem value="PKR">PKR</MenuItem>
-              <MenuItem value="GBP">GBP</MenuItem>
-            </Select>
-          </FormControl>
     </AppBar>
   );
 };
