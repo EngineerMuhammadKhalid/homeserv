@@ -2,34 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { auth } from '../firebase';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Box, 
-  Container, 
-  Avatar, 
-  Menu, 
-  MenuItem, 
-  Tooltip,
-  Divider,
-  Stack,
-  useTheme,
-  alpha,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  ListItemIcon
-} from '@mui/material';
-import { FormControl, InputLabel, Select } from '@mui/material';
-import VerificationBadge from './VerificationBadge';
-import { useCurrency } from '../context/CurrencyContext';
-import { 
-  Search, 
+      </Drawer>
   CalendarMonth as Calendar, 
   Message as MessageSquare, 
   Person as User, 
@@ -240,7 +213,35 @@ export const Navbar = () => {
               </Button>
             )}
 
-                {/* Mobile Menu Toggle */}
+                {/* Compact Currency Selector (inside user actions) */}
+            <FormControl size="small" sx={{ minWidth: 48, width: 'auto', mr: 1, display: { xs: 'none', md: 'flex' } }}>
+              <InputLabel id="currency-select-label">Currency</InputLabel>
+              <Select
+                labelId="currency-select-label"
+                value={currency}
+                label="Currency"
+                onChange={async (e) => {
+                  const c = e.target.value as any;
+                  try { setCurrency(c); } catch (err) { console.error('Currency set failed', err); }
+                  try {
+                    if (user) {
+                      const { updateDoc, doc } = await import('firebase/firestore');
+                      const { db } = await import('../firebase');
+                      await updateDoc(doc(db, 'users', user.uid), { currency: c });
+                    }
+                  } catch (err) {
+                    console.error('Failed to save currency', err);
+                  }
+                }}
+                size="small"
+                sx={{ bgcolor: 'background.paper', borderRadius: 1, minWidth: 48 }}
+              >
+                <MenuItem value="PKR">PKR</MenuItem>
+                <MenuItem value="GBP">GBP</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Mobile Menu Toggle */}
             <IconButton
               color="inherit"
               aria-label="open drawer"
