@@ -23,6 +23,7 @@ import { ProviderServices } from './pages/ProviderServices';
 import { Settings } from './pages/Settings';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CurrencyProvider } from './context/CurrencyContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -41,6 +42,7 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrorBoundary>
+        <CurrencyProvider>
         <AuthProvider>
           <BrowserRouter>
             <Routes>
@@ -99,6 +101,7 @@ export default function App() {
             </Routes>
           </BrowserRouter>
         </AuthProvider>
+        </CurrencyProvider>
       </ErrorBoundary>
     </ThemeProvider>
   );

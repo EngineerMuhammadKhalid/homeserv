@@ -25,6 +25,9 @@ import {
   ListItemText,
   ListItemIcon
 } from '@mui/material';
+import { FormControl, InputLabel, Select } from '@mui/material';
+import VerificationBadge from './VerificationBadge';
+import { useCurrency } from '../context/CurrencyContext';
 import { 
   Search, 
   CalendarMonth as Calendar, 
@@ -42,6 +45,7 @@ import {
 
 export const Navbar = () => {
   const { user, profile } = useAuth();
+  const { currency, setCurrency } = useCurrency();
   const navigate = useNavigate();
   const theme = useTheme();
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -236,7 +240,7 @@ export const Navbar = () => {
               </Button>
             )}
 
-            {/* Mobile Menu Toggle */}
+                {/* Mobile Menu Toggle */}
             <IconButton
               color="inherit"
               aria-label="open drawer"
@@ -263,26 +267,33 @@ export const Navbar = () => {
       >
         {drawer}
       </Drawer>
-                {/* Currency Selector */}
-                <FormControl size="small" sx={{ minWidth: 80 }}>
-                  <InputLabel id="currency-select-label">Currency</InputLabel>
-                  <Select
-                    labelId="currency-select-label"
-                    value={currency}
-                    label="Currency"
-                    onChange={async (e) => {
-                      const c = e.target.value as any;
-                      setCurrency(c);
-                      if (user) {
-                        try { await updateDoc(doc(db, 'users', user.uid), { currency: c }); } catch (err) { console.error('Failed to save currency', err); }
-                      }
-                    }}
-                    sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
-                  >
-                    <MenuItem value="PKR">PKR</MenuItem>
-                    <MenuItem value="GBP">GBP</MenuItem>
-                  </Select>
-                </FormControl>
+          {/* Currency Selector (rendered last so it appears on the right) */}
+          <FormControl size="small" sx={{ minWidth: 80, mr: 2, display: { xs: 'none', md: 'flex' } }}>
+            <InputLabel id="currency-select-label">Currency</InputLabel>
+            <Select
+              labelId="currency-select-label"
+              value={currency}
+              label="Currency"
+              onChange={async (e) => {
+                const c = e.target.value as any;
+                try { setCurrency(c); } catch (err) { console.error('Currency set failed', err); }
+                // Persist to user profile if available (best-effort)
+                try {
+                  if (user) {
+                    const { updateDoc, doc } = await import('firebase/firestore');
+                    const { db } = await import('../firebase');
+                    await updateDoc(doc(db, 'users', user.uid), { currency: c });
+                  }
+                } catch (err) {
+                  console.error('Failed to save currency', err);
+                }
+              }}
+              sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
+            >
+              <MenuItem value="PKR">PKR</MenuItem>
+              <MenuItem value="GBP">GBP</MenuItem>
+            </Select>
+          </FormControl>
     </AppBar>
   );
 };
