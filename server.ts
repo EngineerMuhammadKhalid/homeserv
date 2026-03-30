@@ -178,6 +178,60 @@ async function startServer() {
     res.status(200).json({ received: true });
   });
 
+  // Process a payment server-side (centralized flow). This endpoint will create
+  // a payment record, update invoice status, booking, and provider wallet.
+  app.post('/api/payments/process', async (req, res) => {
+    if (!hasAdmin) return requireAdmin(res);
+    try {
+      const { invoiceId, paymentMethod, invoice } = req.body;
+      const db = admin.firestore();
+
+      // Basic validation
+      if (!invoiceId || !paymentMethod) return res.status(400).json({ error: 'invoiceId and paymentMethod are required' });
+
+      // Create payment record
+      const paymentData = {
+        invoiceId,
+        customerId: invoice?.customerId || null,
+        providerId: invoice?.providerId || null,
+        amount: invoice?.amount || 0,
+        method: paymentMethod,
+        transactionId: `TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        status: 'success',
+        createdAt: new Date().toISOString()
+      };
+
+      const pRef = await db.collection('payments').add(paymentData);
+
+      // Update invoice
+      if (invoiceId) {
+        await db.collection('invoices').doc(invoiceId).set({ status: 'paid', updatedAt: new Date().toISOString() }, { merge: true });
+      }
+
+      // Update booking if present
+      if (invoice?.bookingId) {
+        await db.collection('bookings').doc(invoice.bookingId).set({ paymentStatus: 'paid', escrowStatus: 'held', updatedAt: new Date().toISOString() }, { merge: true });
+      }
+
+      // Update provider wallet
+      if (invoice?.providerId) {
+        const wRef = db.collection('wallets').doc(invoice.providerId);
+        const wSnap = await wRef.get();
+        if (wSnap.exists) {
+          const w = wSnap.data() || {};
+          await wRef.set({ pendingBalance: (w.pendingBalance || 0) + (invoice.amount || 0), updatedAt: new Date().toISOString() }, { merge: true });
+        } else {
+          await wRef.set({ userId: invoice.providerId, balance: 0, pendingBalance: invoice.amount || 0, totalEarned: 0, createdAt: new Date().toISOString() });
+        }
+      }
+
+      res.status(201).json({ id: pRef.id, status: 'success' });
+    } catch (err) {
+      console.error('Payment processing error', err);
+      res.status(500).json({ error: 'Failed to process payment' });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

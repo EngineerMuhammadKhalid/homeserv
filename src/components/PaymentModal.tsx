@@ -20,51 +20,29 @@ export const PaymentModal = ({ isOpen, onClose, invoice, onSuccess }: PaymentMod
   const handlePayment = async () => {
     setLoading(true);
     setStep('processing');
-    
-    // Simulate payment processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     try {
-      // 1. Create payment record
-      await addDoc(collection(db, 'payments'), {
-        invoiceId: invoice.id,
-        customerId: invoice.customerId,
-        providerId: invoice.providerId,
-        amount: invoice.amount,
-        method: paymentMethod,
-        transactionId: `TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        status: 'success',
-        createdAt: new Date().toISOString()
+      const resp = await fetch('/api/payments/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoiceId: invoice.id, paymentMethod, invoice })
       });
-
-      // 2. Update invoice status
-      await updateDoc(doc(db, 'invoices', invoice.id), {
-        status: 'paid',
-        updatedAt: new Date().toISOString()
-      });
-
-      // 3. Update booking status and escrow
-      if (invoice.bookingId) {
-        await updateDoc(doc(db, 'bookings', invoice.bookingId), {
-          paymentStatus: 'paid',
-          escrowStatus: 'held',
-          updatedAt: new Date().toISOString()
-        });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err?.error || 'Payment failed');
       }
-
-      // 4. Update provider's wallet (pending balance)
-      await updateDoc(doc(db, 'wallets', invoice.providerId), {
-        pendingBalance: increment(invoice.amount),
-        updatedAt: new Date().toISOString()
-      });
-
-      setStep('success');
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 2000);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, 'payments');
+      const data = await resp.json();
+      if (data.status === 'success') {
+        setStep('success');
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 1200);
+      } else {
+        throw new Error('Payment processing returned unexpected status');
+      }
+    } catch (err: any) {
+      console.error('Payment error', err);
+      alert('Payment failed: ' + (err?.message || err));
       setStep('details');
     } finally {
       setLoading(false);
