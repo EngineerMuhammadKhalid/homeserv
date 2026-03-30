@@ -268,7 +268,7 @@ export const Navbar = () => {
         {drawer}
       </Drawer>
           {/* Currency Selector (rendered last so it appears on the right) */}
-          <FormControl size="small" sx={{ minWidth: 80, mr: 2, display: { xs: 'none', md: 'flex' } }}>
+          <FormControl size="small" sx={{ minWidth: 56, mr: 2, display: { xs: 'none', md: 'flex' } }}>
             <InputLabel id="currency-select-label">Currency</InputLabel>
             <Select
               labelId="currency-select-label"
@@ -288,7 +288,8 @@ export const Navbar = () => {
                   console.error('Failed to save currency', err);
                 }
               }}
-              sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
+              size="small"
+              sx={{ bgcolor: 'background.paper', borderRadius: 1, minWidth: 56 }}
             >
               <MenuItem value="PKR">PKR</MenuItem>
               <MenuItem value="GBP">GBP</MenuItem>
