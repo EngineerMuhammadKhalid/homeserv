@@ -168,15 +168,10 @@ export const Navbar = () => {
                     <Box sx={{ textAlign: 'right' }}>
                       <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end', fontWeight: 700, lineHeight: 1 }}>
                         {profile?.name || 'User'}
-                        {profile?.verificationStatus === 'verified' ? (
-                          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'success.main', fontSize: '0.65rem', fontWeight: 800 }}>
-                            <ShieldCheck style={{ width: 12, height: 12 }} /> Verified
-                          </Box>
-                        ) : (
-                          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.65rem', fontWeight: 700 }}>
-                            Not verified
-                          </Box>
-                        )}
+                        {/* Show verification badges: admin, customer (blue), provider (green) */}
+                        {profile?.role === 'admin' && <VerificationBadge type="admin" />}
+                        {profile?.role === 'customer' && profile?.verificationStatus === 'verified' && <VerificationBadge type="customer" />}
+                        {profile?.role === 'provider' && profile?.verificationStatus === 'verified' && <VerificationBadge type="provider" />}
                       </Typography>
                       {profile?.username && (
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
@@ -268,6 +263,26 @@ export const Navbar = () => {
       >
         {drawer}
       </Drawer>
+                {/* Currency Selector */}
+                <FormControl size="small" sx={{ minWidth: 80 }}>
+                  <InputLabel id="currency-select-label">Currency</InputLabel>
+                  <Select
+                    labelId="currency-select-label"
+                    value={currency}
+                    label="Currency"
+                    onChange={async (e) => {
+                      const c = e.target.value as any;
+                      setCurrency(c);
+                      if (user) {
+                        try { await updateDoc(doc(db, 'users', user.uid), { currency: c }); } catch (err) { console.error('Failed to save currency', err); }
+                      }
+                    }}
+                    sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
+                  >
+                    <MenuItem value="PKR">PKR</MenuItem>
+                    <MenuItem value="GBP">GBP</MenuItem>
+                  </Select>
+                </FormControl>
     </AppBar>
   );
 };

@@ -1,50 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../firebase';
-import { 
-  Box, 
-  Container, 
-  import { 
-    Box,
-    Container,
-    Typography,
-    Grid,
-    Card,
-    CardContent,
-    Button,
-    TextField,
-    Avatar,
-    Stack,
-    Chip,
-    useTheme,
-    alpha,
-    Paper,
-    IconButton,
-    Divider,
-    Rating,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    CircularProgress
-  } from '@mui/material';
-  import { useCurrency } from '../context/CurrencyContext';
-  import { formatCurrency } from '../utils/currency';
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  TextField,
+  Avatar,
+  Stack,
+  Chip,
+  useTheme,
+  alpha,
+  Paper,
+  IconButton,
+  Divider,
+  Rating,
+  List,
+  ListItem,
+  ListItemText,
   ListItemIcon,
-  Divider
+  CircularProgress,
+  InputAdornment,
+  ListItemButton,
+  Slider,
+  Skeleton,
+  FormControl,
+  Select,
+  MenuItem
 } from '@mui/material';
-import { 
-  Search as SearchIcon, 
-  LocationOn as MapPin, 
-  FilterList as Filter, 
-  Star, 
-  ChevronRight, 
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
+import {
+  Search as SearchIcon,
+  LocationOn as MapPin,
+  FilterList as Filter,
+  Star,
+  ChevronRight,
   CalendarMonth as Calendar,
   Category as CategoryIcon,
   AttachMoney as MoneyIcon
 } from '@mui/icons-material';
 import { motion } from 'motion/react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { UK_CITIES } from '../data/ukCities';
+import { PAKISTAN_CITIES, PROVINCE_LIST } from '../data/pakistanCities';
 
 export const Search = () => {
   const theme = useTheme();
@@ -55,6 +58,8 @@ export const Search = () => {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState(searchParams.get('category') || 'All');
   const [location, setLocation] = useState(searchParams.get('location') || '');
+  const [country, setCountry] = useState(searchParams.get('country') || 'Pakistan');
+  const [city, setCity] = useState(searchParams.get('city') || '');
   const [deadline, setDeadline] = useState(searchParams.get('deadline') || '');
   const [priceRange, setPriceRange] = useState<number[]>([500, 5000]);
 
@@ -79,10 +84,10 @@ export const Search = () => {
         }
 
         // Client-side filtering for location since Firestore doesn't support partial string matching easily without external tools
-        if (location) {
-          providerData = providerData.filter(p => 
-            p.address?.toLowerCase().includes(location.toLowerCase())
-          );
+        if (city) {
+          providerData = providerData.filter(p => p.address?.toLowerCase().includes(city.toLowerCase()));
+        } else if (location) {
+          providerData = providerData.filter(p => p.address?.toLowerCase().includes(location.toLowerCase()));
         }
         
         setProviders(providerData);
@@ -142,24 +147,47 @@ export const Search = () => {
               <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 2 }}>
                 <MapPin fontSize="small" /> Location
               </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Filter by location..."
-                value={location}
-                onChange={(e) => {
-                  setLocation(e.target.value);
-                  setSearchParams(prev => {
-                    if (!e.target.value) prev.delete('location');
-                    else prev.set('location', e.target.value);
-                    return prev;
-                  });
-                }}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><MapPin sx={{ fontSize: 18, color: 'text.secondary' }} /></InputAdornment>,
-                  sx: { borderRadius: 2, bgcolor: 'grey.50', fontSize: '0.75rem', fontWeight: 600 }
-                }}
-              />
+              <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                <InputLabel id="country-select-label">Country</InputLabel>
+                <Select
+                  labelId="country-select-label"
+                  value={country}
+                  label="Country"
+                  onChange={(e) => {
+                    setCountry(e.target.value as string);
+                    setCity('');
+                    setSearchParams(prev => {
+                      prev.set('country', e.target.value as string);
+                      prev.delete('city');
+                      return prev;
+                    });
+                  }}
+                >
+                  <MenuItem value="Pakistan">Pakistan</MenuItem>
+                  <MenuItem value="UK">United Kingdom</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth size="small">
+                <InputLabel id="city-select-label">City</InputLabel>
+                <Select
+                  labelId="city-select-label"
+                  value={city}
+                  label="City"
+                  onChange={(e) => {
+                    setCity(e.target.value as string);
+                    setSearchParams(prev => { prev.set('city', e.target.value as string); return prev; });
+                  }}
+                >
+                  {country === 'Pakistan' ? (
+                    PROVINCE_LIST.map((prov) => (
+                      PAKISTAN_CITIES[prov].map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)
+                    ))
+                  ) : (
+                    UK_CITIES.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)
+                  )}
+                </Select>
+              </FormControl>
             </Paper>
 
             {deadline && (

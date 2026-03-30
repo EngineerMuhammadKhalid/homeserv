@@ -125,6 +125,7 @@ export const Settings = () => {
         name,
         username,
         profilePhoto,
+        currency: localStorage.getItem('hs_currency') || undefined,
         updatedAt: new Date().toISOString()
       });
 
