@@ -426,13 +426,13 @@ export const Bookings = () => {
                             )}
                           </Box>
                           <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 2, fontWeight: 600 }}>
-                            {profile?.role === 'provider' ? 'Customer' : 'Provider'}: {booking.id.slice(0, 8)}
+                            {profile?.role === 'provider' ? 'Customer' : 'Provider'}: {booking.otherName || booking.id.slice(0, 8)}
                           </Typography>
                           
                           <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap sx={{ mb: 3 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                              <Calendar sx={{ fontSize: 14 }} />
-                              <Typography variant="caption" fontWeight={700}>{booking.bookingDate}</Typography>
+                                <Calendar sx={{ fontSize: 14 }} />
+                                <Typography variant="caption" fontWeight={700}>{booking.bookingDate}</Typography>
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
                               <Clock sx={{ fontSize: 14 }} />

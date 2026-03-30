@@ -1,4 +1,6 @@
 // Simple PDF generation using canvas and file download
+import { formatCurrency } from './currency';
+
 export const generateInvoicePDF = (booking: any, invoice: any) => {
   const canvas = document.createElement('canvas');
   canvas.width = 800;
@@ -34,7 +36,8 @@ export const generateInvoicePDF = (booking: any, invoice: any) => {
   y += 25;
   ctx.fillText(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 50, y);
   y += 25;
-  ctx.fillText(`Amount: Rs. ${invoice.amount}`, 50, y);
+  const currency = (localStorage.getItem('hs_currency') as string) || 'PKR';
+  ctx.fillText(`Amount: ${formatCurrency(invoice.amount, currency)}`, 50, y);
   y += 25;
   ctx.fillText(`Status: ${invoice.status}`, 50, y);
 
@@ -58,13 +61,13 @@ export const generateInvoicePDF = (booking: any, invoice: any) => {
   
   ctx.font = '12px Arial';
   y += 30;
-  ctx.fillText(`Subtotal: Rs. ${invoice.amount}`, 50, y);
+  ctx.fillText(`Subtotal: ${formatCurrency(invoice.amount, currency)}`, 50, y);
   y += 25;
-  ctx.fillText(`Tax (0%): Rs. 0`, 50, y);
+  ctx.fillText(`Tax (0%): ${formatCurrency(0, currency)}`, 50, y);
   y += 25;
   ctx.fillStyle = '#059669';
   ctx.font = 'bold 14px Arial';
-  ctx.fillText(`Total: Rs. ${invoice.amount}`, 50, y);
+  ctx.fillText(`Total: ${formatCurrency(invoice.amount, currency)}`, 50, y);
 
   // Footer
   y = 950;

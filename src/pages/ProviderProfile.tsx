@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, addDoc, collection, setDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 import { 
   Box, 
   Container, 
@@ -44,6 +46,7 @@ import { motion } from 'motion/react';
 export const ProviderProfile = () => {
   const { id } = useParams();
   const { user, profile } = useAuth();
+  const { currency } = useCurrency();
   const navigate = useNavigate();
   const theme = useTheme();
   const [provider, setProvider] = useState<any>(null);
@@ -372,7 +375,7 @@ export const ProviderProfile = () => {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
               <Box>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Hourly Rate</Typography>
-                <Typography variant="h4" fontWeight={800}>Rs. {provider.hourlyRate}</Typography>
+                <Typography variant="h4" fontWeight={800}>{formatCurrency(provider.hourlyRate, currency)}</Typography>
               </Box>
               <Chip label="Available Now" color="success" size="small" sx={{ fontWeight: 800, borderRadius: 1 }} />
             </Box>

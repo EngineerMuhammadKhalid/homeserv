@@ -3,6 +3,8 @@ import { X, CreditCard, DollarSign, CheckCircle, AlertCircle, Loader2, Receipt }
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../firebase';
 import { doc, updateDoc, addDoc, collection, increment } from 'firebase/firestore';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
 
 interface PaymentModalProps {
@@ -16,6 +18,7 @@ export const PaymentModal = ({ isOpen, onClose, invoice, onSuccess }: PaymentMod
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'details' | 'processing' | 'success'>('details');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'easypaisa' | 'jazzcash' | 'bank' | 'wallet'>('card');
+  const { currency } = useCurrency();
 
   const handlePayment = async () => {
     setLoading(true);
@@ -80,13 +83,13 @@ export const PaymentModal = ({ isOpen, onClose, invoice, onSuccess }: PaymentMod
                 <div className="bg-zinc-50 p-6 rounded-2xl border border-zinc-100">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-zinc-500 text-sm">Amount to Pay</span>
-                    <span className="text-2xl font-bold text-zinc-900">Rs. {invoice.amount}</span>
+                    <span className="text-2xl font-bold text-zinc-900">{formatCurrency(invoice.amount, currency)}</span>
                   </div>
                   <div className="space-y-2">
                     {invoice.items?.map((item: any, i: number) => (
                       <div key={i} className="flex justify-between text-xs">
                         <span className="text-zinc-400">{item.description}</span>
-                        <span className="text-zinc-600 font-medium">Rs. {item.amount}</span>
+                        <span className="text-zinc-600 font-medium">{formatCurrency(item.amount, currency)}</span>
                       </div>
                     ))}
                   </div>

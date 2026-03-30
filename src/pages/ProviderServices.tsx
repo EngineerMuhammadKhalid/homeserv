@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
@@ -9,6 +11,7 @@ import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
 
 export const ProviderServices = () => {
   const { user } = useAuth();
+  const { currency } = useCurrency();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -152,7 +155,7 @@ export const ProviderServices = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-bold text-zinc-900 mb-2">Price (Rs.)</label>
+                      <label className="block text-sm font-bold text-zinc-900 mb-2">Price</label>
                       <div className="relative">
                         <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                         <input 
@@ -282,7 +285,7 @@ export const ProviderServices = () => {
                 </div>
                 <div className="text-right">
                   <span className="text-zinc-400 text-[10px] uppercase font-bold block">Starting at</span>
-                  <span className="text-xl font-black text-emerald-600">Rs. {service.price}</span>
+                      <span className="text-xl font-black text-emerald-600">{formatCurrency(service.price, currency)}</span>
                 </div>
               </div>
             </div>

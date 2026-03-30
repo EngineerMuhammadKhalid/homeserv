@@ -4,30 +4,32 @@ import { db } from '../firebase';
 import { 
   Box, 
   Container, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Button, 
-  TextField, 
-  Select, 
-  MenuItem, 
-  FormControl, 
-  InputLabel, 
-  Avatar, 
-  Stack, 
-  Chip,
-  useTheme,
-  alpha,
-  Paper,
-  InputAdornment,
-  IconButton,
-  Skeleton,
-  Slider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
+  import { 
+    Box,
+    Container,
+    Typography,
+    Grid,
+    Card,
+    CardContent,
+    Button,
+    TextField,
+    Avatar,
+    Stack,
+    Chip,
+    useTheme,
+    alpha,
+    Paper,
+    IconButton,
+    Divider,
+    Rating,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemIcon,
+    CircularProgress
+  } from '@mui/material';
+  import { useCurrency } from '../context/CurrencyContext';
+  import { formatCurrency } from '../utils/currency';
   ListItemIcon,
   Divider
 } from '@mui/material';
@@ -49,6 +51,7 @@ export const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [providers, setProviders] = useState<any[]>([]);
+  const { currency } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState(searchParams.get('category') || 'All');
   const [location, setLocation] = useState(searchParams.get('location') || '');
@@ -308,7 +311,7 @@ export const Search = () => {
                                 Starting from
                               </Typography>
                               <Typography variant="h6" fontWeight={800}>
-                                Rs. {provider.hourlyRate}<Typography component="span" variant="caption" sx={{ fontWeight: 400, color: 'text.secondary', ml: 0.5 }}>/hr</Typography>
+                                {formatCurrency(provider.hourlyRate, currency)}<Typography component="span" variant="caption" sx={{ fontWeight: 400, color: 'text.secondary', ml: 0.5 }}>/hr</Typography>
                               </Typography>
                             </Box>
                             <Button 

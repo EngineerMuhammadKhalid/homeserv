@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
+import { formatCurrency } from '../utils/currency';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { generateInvoicePDF } from '../utils/generatePDF';
@@ -43,6 +45,7 @@ export const BookingTimeline = ({ booking, isProvider, invoice, onStatusChange }
   const [showRevisionForm, setShowRevisionForm] = useState(false);
 
   const currentStatusIdx = BOOKING_STATUSES.indexOf(booking.status || 'assigned');
+  const { currency } = useCurrency();
 
   const handlePriceProposal = async () => {
     if (!newPrice) return alert('Please enter a price');
@@ -173,11 +176,11 @@ export const BookingTimeline = ({ booking, isProvider, invoice, onStatusChange }
       {booking.status === 'pending_price_approval' && !isProvider && (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
           <Box>
-            <Typography variant="body2" fontWeight={700} mb={1}>
-              Provider Proposed Price: Rs. {booking.proposedPrice}
+              <Typography variant="body2" fontWeight={700} mb={1}>
+                Provider Proposed Price: {formatCurrency(booking.proposedPrice, currency)}
             </Typography>
-            <Typography variant="caption" color="textSecondary">
-              Original price: Rs. {booking.totalAmount}
+              <Typography variant="caption" color="textSecondary">
+                Original price: {formatCurrency(booking.totalAmount, currency)}
             </Typography>
             <Stack direction="row" spacing={1} mt={2}>
               <Button
@@ -205,8 +208,8 @@ export const BookingTimeline = ({ booking, isProvider, invoice, onStatusChange }
       {booking.status === 'pending_provider_acceptance' && isProvider && (
         <Alert severity="warning" sx={{ borderRadius: 2 }}>
           <Box>
-            <Typography variant="body2" fontWeight={700} mb={1}>
-              Customer Counter-Offer: Rs. {booking.counterOffer}
+              <Typography variant="body2" fontWeight={700} mb={1}>
+                Customer Counter-Offer: {formatCurrency(booking.counterOffer, currency)}
             </Typography>
             <Stack direction="row" spacing={1} mt={2}>
               <Button
@@ -243,7 +246,7 @@ export const BookingTimeline = ({ booking, isProvider, invoice, onStatusChange }
           ) : (
             <Paper sx={{ p: 2, borderRadius: 2 }}>
               <Typography variant="caption" fontWeight={700} display="block" mb={1}>
-                Propose New Price (Rs.)
+                Propose New Price ({currency})
               </Typography>
               <TextField
                 fullWidth
