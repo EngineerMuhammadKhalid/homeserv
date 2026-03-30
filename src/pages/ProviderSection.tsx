@@ -23,6 +23,7 @@ export const ProviderSection = () => {
         const data = docSnap.data();
         setProviderData({
           ...data,
+          name: data.name || profile?.name || profile?.displayName || '',
           portfolio: data.portfolio || [],
           skills: data.skills || [],
           languages: data.languages || ['English'],
@@ -31,6 +32,7 @@ export const ProviderSection = () => {
       } else {
         // Initialize if not exists
         const initialData = {
+          name: profile?.name || profile?.displayName || '',
           userId: user.uid,
           bio: '',
           hourlyRate: 1000,

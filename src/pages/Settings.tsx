@@ -132,6 +132,7 @@ export const Settings = () => {
       if (profile?.role === 'provider' && providerData) {
         await setDoc(doc(db, 'service_providers', user.uid), {
           ...providerData,
+          name, // keep provider name in sync with user profile
           profilePhoto, // Keep in sync
           address: providerData.address || '', // Ensure address is saved
           updatedAt: new Date().toISOString()
