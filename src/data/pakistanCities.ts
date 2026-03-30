@@ -20,3 +20,14 @@ export const PAKISTAN_CITIES: Record<string, string[]> = {
 };
 
 export const PROVINCE_LIST = Object.keys(PAKISTAN_CITIES);
+
+// Flattened list of cities for quick lookup or selection (e.g., birth places)
+export const BIRTH_PLACES: string[] = (() => {
+  const all: string[] = [];
+  for (const prov of Object.keys(PAKISTAN_CITIES)) {
+    const arr = PAKISTAN_CITIES[prov] || [];
+    for (const c of arr) all.push(c);
+  }
+  // dedupe while preserving order
+  return Array.from(new Set(all));
+})();
