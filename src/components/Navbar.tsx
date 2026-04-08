@@ -26,8 +26,7 @@ import {
   ListItemIcon,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem
+  Select
 } from '@mui/material';
 import {
   Search,
