@@ -224,7 +224,7 @@ export const ProviderProfile = () => {
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
                     <MapPin fontSize="small" />
-                    <Typography variant="body2" fontWeight={600}>Lahore, Pakistan</Typography>
+                    <Typography variant="body2" fontWeight={600}>{provider.address || 'Great Britain'}</Typography>
                   </Box>
                 </Box>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

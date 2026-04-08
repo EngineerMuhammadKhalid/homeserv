@@ -329,7 +329,7 @@ export const Settings = () => {
                 value={providerData.address || ''}
                 onChange={(e) => setProviderData({ ...providerData, address: e.target.value })}
                 className="w-full p-3 bg-zinc-50 border border-zinc-100 rounded-xl outline-none focus:border-emerald-500"
-                placeholder="Enter your primary service area (e.g. Gulberg, Lahore)"
+                placeholder="Enter your primary service area (e.g. Central London, Birmingham)"
               />
               <p className="mt-2 text-xs text-zinc-400 italic">This helps customers find you when they search by location.</p>
             </section>

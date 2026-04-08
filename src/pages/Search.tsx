@@ -59,7 +59,7 @@ export const Search = () => {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState(searchParams.get('category') || 'All');
   const [location, setLocation] = useState(searchParams.get('location') || '');
-  const [country, setCountry] = useState(searchParams.get('country') || 'Pakistan');
+  const [country, setCountry] = useState(searchParams.get('country') || 'Great Britain');
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [deadline, setDeadline] = useState(searchParams.get('deadline') || '');
   const [priceRange, setPriceRange] = useState<number[]>([500, 5000]);
@@ -294,7 +294,7 @@ export const Search = () => {
                                 <Box>
                                   <Typography variant="subtitle1" fontWeight={800}>{provider.name}</Typography>
                                   <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontWeight: 600 }}>
-                                    <MapPin sx={{ fontSize: 12 }} /> 2.5 km away
+                                    <MapPin sx={{ fontSize: 12 }} /> {provider.address || 'Great Britain'}
                                   </Typography>
                                 </Box>
                                 <Chip 
