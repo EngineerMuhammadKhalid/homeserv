@@ -21,7 +21,7 @@ export const Cities = () => {
 
         <div className="md:col-span-2">
           {!selected ? (
-            <div className="p-6 bg-zinc-50 rounded">Select a province to view its cities.</div>
+            <div className="p-6 bg-zinc-50 rounded">Select a region to view its cities.</div>
           ) : (
             <div className="p-6 bg-white border rounded">
               <h3 className="text-lg font-bold mb-3">{selected}</h3>
