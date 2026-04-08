@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CURRENCY_RATES } from '../utils/currency';
 
-type Currency = 'PKR' | 'GBP';
+type Currency = 'GBP';
 
 const CurrencyContext = createContext({
-  currency: 'PKR' as Currency,
+  currency: 'GBP' as Currency,
   setCurrency: (c: Currency) => {},
   rates: CURRENCY_RATES
 });
 
 export const CurrencyProvider = ({ children }: any) => {
-  const [currency, setCurrency] = useState<Currency>(() => (localStorage.getItem('hs_currency') as Currency) || 'PKR');
+  const [currency, setCurrency] = useState<Currency>(() => (localStorage.getItem('hs_currency') as Currency) || 'GBP');
 
   useEffect(() => {
     localStorage.setItem('hs_currency', currency);

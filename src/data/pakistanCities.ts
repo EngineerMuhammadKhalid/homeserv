@@ -1,21 +1,15 @@
 export const PAKISTAN_CITIES: Record<string, string[]> = {
-  Punjab: [
-    'Lahore','Faisalabad','Rawalpindi','Gujranwala','Multan','Sialkot','Sargodha','Bahawalpur','Sheikhupura','Sahiwal','Jhelum','Gujrat','Okara','Rahim Yar Khan','Jhang','Kasur','Toba Tek Singh','Attock','Mianwali','Chakwal','Wazirabad','Hafizabad','Gujarat','Narowal','Samba','Chiniot','Khanewal','Pakpattan','Lodhran','Vehari'
+  England: [
+    'London','Birmingham','Manchester','Leeds','Bristol','Liverpool','Newcastle','Sheffield','Coventry','Leicester','Nottingham','Plymouth','Reading','Sunderland','Southampton','Derby','Stoke-on-Trent','Wolverhampton','Lincoln','Oxford','Cambridge','York','Winchester','Bath','Exeter','Chester','Worcester','Hereford','Peterborough','Gloucester'
   ],
-  Sindh: [
-    'Karachi','Hyderabad','Sukkur','Larkana','Nawabshah','Mirpurkhas','Jacobabad','Khairpur','Thatta','Badin','Dadu','Shikarpur','Qambar Shahdadkot','Kashmore','Tando Allahyar','Tando Muhammad Khan','Sanghar','Matli','Hyderabad (City)','Karachi (East)','Karachi (South)'
+  Scotland: [
+    'Edinburgh','Glasgow','Aberdeen','Dundee','Perth','Inverness','Stirling','Dunfermline','Paisley','Kilmarnock','Ayr','Dumfries','Oban','Fort William','Wick','Lerwick','Kirkwall'
   ],
-  'Khyber Pakhtunkhwa': [
-    'Peshawar','Mardan','Abbottabad','Swat','Kohat','Dera Ismail Khan','Charsadda','Nowshera','Bannu','Karak','Mansehra','Buner','Chitral','Lower Dir','Upper Dir','Malakand','Battagram','Kohistan','Haripur','Shangla'
+  Wales: [
+    'Cardiff','Swansea','Newport','Wrexham','Llandudno','Caernarfon','Aberystwyth','Carmarthen','Bangor','Merthyr Tydfil','Neath','Port Talbot'
   ],
-  Balochistan: [
-    'Quetta','Gwadar','Turbat','Khuzdar','Sibi','Chaman','Zhob','Pishin','Loralai','Barkhan','Mastung','Kalat','Jaffarabad','Nasirabad','Washuk','Nushki','Harnai','Sherani'
-  ],
-  'Gilgit-Baltistan': [
-    'Gilgit','Skardu','Hunza','Nagar','Ghanche','Shigar','Kharmang','Roundu','Astore','Khaplu'
-  ],
-  'Azad Jammu and Kashmir': [
-    'Muzaffarabad','Mirpur','Kotli','Bhimber','Bagh','Rawalakot','Nyakyel','Sudhnoti','Hattian','Poonch','Mansehra','Bagh','Khel'
+  'Northern Ireland': [
+    'Belfast','Derry','Lisburn','Newtownabbey','Craigavon','Armagh','Newry','Enniskillen','Bangor','Carrickfergus'
   ]
 };
 

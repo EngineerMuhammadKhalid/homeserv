@@ -36,7 +36,7 @@ export const generateInvoicePDF = (booking: any, invoice: any) => {
   y += 25;
   ctx.fillText(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 50, y);
   y += 25;
-  const currency = (localStorage.getItem('hs_currency') as string) || 'PKR';
+  const currency = (localStorage.getItem('hs_currency') as string) || 'GBP';
   ctx.fillText(`Amount: ${formatCurrency(invoice.amount, currency)}`, 50, y);
   y += 25;
   ctx.fillText(`Status: ${invoice.status}`, 50, y);

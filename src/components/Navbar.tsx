@@ -265,8 +265,7 @@ export const Navbar = () => {
                 size="small"
                 sx={{ bgcolor: 'background.paper', borderRadius: 1, minWidth: 48 }}
               >
-                <MenuItem value="PKR">PKR</MenuItem>
-                <MenuItem value="GBP">GBP</MenuItem>
+                <MenuItem value="GBP">GBP (£)</MenuItem>
               </Select>
             </FormControl>
 
