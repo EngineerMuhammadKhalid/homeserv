@@ -48,6 +48,7 @@ export const Auth = () => {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
+        navigate('/dashboard');
       } else {
         const { user } = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, 'users', user.uid), {
@@ -55,6 +56,7 @@ export const Auth = () => {
           email,
           role,
           createdAt: new Date().toISOString(),
+          profileCompletionStep: 'pending'
         });
         
         // Initialize Wallet
@@ -65,8 +67,10 @@ export const Auth = () => {
           totalEarned: 0,
           updatedAt: new Date().toISOString()
         });
+        
+        // Redirect to profile completion
+        navigate('/profile-completion');
       }
-      navigate('/dashboard');
     } catch (err: any) {
       if (err.code === 'auth/operation-not-allowed') {
         setError('Authentication method is disabled. Please enable "Email/Password" and "Google" in your Firebase Console under Authentication > Sign-in method.');
@@ -87,6 +91,7 @@ export const Auth = () => {
           email: user.email,
           role: 'customer',
           createdAt: new Date().toISOString(),
+          profileCompletionStep: 'pending'
         });
         
         // Initialize Wallet
@@ -97,8 +102,13 @@ export const Auth = () => {
           totalEarned: 0,
           updatedAt: new Date().toISOString()
         });
+        
+        // New user - redirect to profile completion
+        navigate('/profile-completion');
+      } else {
+        // Existing user - redirect to dashboard
+        navigate('/dashboard');
       }
-      navigate('/dashboard');
     } catch (err: any) {
       if (err.code === 'auth/operation-not-allowed') {
         setError('Google Sign-In is disabled. Please enable "Google" in your Firebase Console under Authentication > Sign-in method.');

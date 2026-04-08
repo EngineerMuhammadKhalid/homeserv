@@ -21,6 +21,7 @@ import { AdminRoute } from './components/AdminRoute';
 import { ProviderSection } from './pages/ProviderSection';
 import { ProviderServices } from './pages/ProviderServices';
 import { Settings } from './pages/Settings';
+import { ProfileCompletion } from './pages/ProfileCompletion';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CurrencyProvider } from './context/CurrencyContext';
@@ -60,6 +61,11 @@ export default function App() {
                 <Route path="provider/:id" element={<ProviderProfile />} />
                 
                 {/* Protected Routes */}
+                <Route path="profile-completion" element={
+                  <ProtectedRoute>
+                    <ProfileCompletion />
+                  </ProtectedRoute>
+                } />
                 <Route path="dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
