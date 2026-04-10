@@ -1,40 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+
+declare module 'firebase/firestore';
 import { useAuth } from '../AuthContext';
 import {
   Box,
   Container,
   Typography,
-  Card,
-  CardContent,
   Button,
   TextField,
   Stack,
   Avatar,
   Chip,
-  Alert,
   CircularProgress,
   useTheme,
-  alpha,
   Paper
 } from '@mui/material';
-import {
-  Person as PersonIcon,
-  Mail as MailIcon,
-  MapPin as LocationIcon,
-  DollarSign,
-  Upload as UploadIcon,
-  Lightbulb as LightbulbIcon,
-  ArrowForward as ArrowIcon
-} from '@mui/icons-material';
+import PersonIcon from '@mui/icons-material/Person';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 export const ProfileCompletion = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [formData, setFormData] = useState({
@@ -180,7 +174,7 @@ export const ProfileCompletion = () => {
               <Button
                 variant="outlined"
                 component="label"
-                startIcon={<UploadIcon />}
+                startIcon={<CloudUploadIcon />}
                 sx={{ textTransform: 'none' }}
               >
                 Upload Photo
@@ -226,7 +220,7 @@ export const ProfileCompletion = () => {
         {/* Address */}
         <Paper sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <Typography variant="h6" fontWeight={800} sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocationIcon /> Service Location
+            <LocationOnIcon /> Service Location
           </Typography>
           <TextField
             fullWidth
@@ -281,7 +275,7 @@ export const ProfileCompletion = () => {
             {/* Hourly Rate */}
             <Paper sx={{ p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
               <Typography variant="h6" fontWeight={800} sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DollarSign /> Hourly Rate
+                <AttachMoneyIcon /> Hourly Rate
               </Typography>
               <TextField
                 fullWidth
@@ -335,7 +329,7 @@ export const ProfileCompletion = () => {
           fullWidth
           variant="contained"
           size="large"
-          endIcon={<ArrowIcon />}
+          endIcon={<ArrowForwardIcon />}
           onClick={() => handleSave(false)}
           disabled={saving || !formData.name || !formData.username || !formData.address}
           sx={{

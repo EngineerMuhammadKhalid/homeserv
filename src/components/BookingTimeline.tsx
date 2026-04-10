@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatCurrency } from '../utils/currency';
 import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { generateInvoicePDF } from '../utils/generatePDF';
 import {
   Box,
@@ -136,6 +136,22 @@ export const BookingTimeline = ({ booking, isProvider, invoice, onStatusChange }
         customerReview
       });
       onStatusChange?.(booking.id, 'completed');
+      // Create an invoice record for the provider
+      try {
+        await addDoc(collection(db, 'invoices'), {
+          bookingId: booking.id,
+          customerId: booking.customerId,
+          providerId: booking.providerId,
+          amount: booking.totalAmount,
+          status: 'issued',
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          items: [{ description: `${booking.serviceId} Service Fee`, amount: booking.totalAmount }],
+          createdAt: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('Failed to create provider invoice', e);
+      }
+
       alert('Booking marked as complete. Rating submitted.');
     } catch (err) {
       console.error(err);

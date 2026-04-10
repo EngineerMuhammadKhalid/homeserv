@@ -60,13 +60,22 @@ export const Settings = () => {
 
   const handleProfilePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file || !user) return;
+    (async () => {
+      try {
+        const path = `profile_photos/${user.uid}/${Date.now()}_${file.name}`;
+        const ref = storageRef(storage, path);
+        const snapshot = await uploadBytes(ref, file);
+        const url = await getDownloadURL(snapshot.ref);
+        setProfilePhoto(url);
+        // persist immediately so logout won't lose the photo
+        await updateDoc(doc(db, 'users', user.uid), { profilePhoto: url, updatedAt: new Date().toISOString() });
+        await refreshProfile();
+      } catch (err) {
+        console.error('Upload error', err);
+        alert('Failed to upload profile photo: ' + (err as any).message);
+      }
+    })();
   };
 
   const handlePortfolioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -408,15 +417,40 @@ export const Settings = () => {
                     />
                     <input
                       type="text"
-                      placeholder="Account Number"
+                      placeholder="Account Number (8 digits)"
                       value={providerData.payoutMethods?.bank?.accountNumber || ''}
-                      onChange={(e) => setProviderData({ 
-                        ...providerData, 
-                        payoutMethods: { 
-                          ...providerData.payoutMethods, 
-                          bank: { ...(providerData.payoutMethods?.bank || {}), accountNumber: e.target.value } 
-                        } 
-                      })}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                        setProviderData({ 
+                          ...providerData, 
+                          payoutMethods: { 
+                            ...providerData.payoutMethods, 
+                            bank: { ...(providerData.payoutMethods?.bank || {}), accountNumber: digits } 
+                          } 
+                        });
+                      }}
+                      className="w-full p-3 bg-white border border-zinc-200 rounded-xl outline-none focus:border-emerald-500 text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Sort Code (xx-xx-xx)"
+                      value={providerData.payoutMethods?.bank?.sortCode || ''}
+                      onChange={(e) => {
+                        // format to xx-xx-xx
+                        const digits = e.target.value.replace(/\D/g, '').slice(0,6);
+                        const parts = [];
+                        if (digits.length >= 2) parts.push(digits.slice(0,2));
+                        if (digits.length >= 4) parts.push(digits.slice(2,4));
+                        if (digits.length >= 5) parts.push(digits.slice(4));
+                        const formatted = parts.join('-');
+                        setProviderData({ 
+                          ...providerData, 
+                          payoutMethods: { 
+                            ...providerData.payoutMethods, 
+                            bank: { ...(providerData.payoutMethods?.bank || {}), sortCode: formatted } 
+                          } 
+                        });
+                      }}
                       className="w-full p-3 bg-white border border-zinc-200 rounded-xl outline-none focus:border-emerald-500 text-sm"
                     />
                     <input

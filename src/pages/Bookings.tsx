@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, addDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, addDoc, increment, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { 
@@ -247,20 +247,53 @@ export const Bookings = () => {
     if (!booking) return;
 
     try {
-      // 1. Update booking
+      // 1. Update booking status
       await updateDoc(doc(db, 'bookings', bookingId), {
         status: 'completed',
         escrowStatus: 'released',
         updatedAt: new Date().toISOString()
       });
 
-      // 2. Update provider's wallet
+      // 2. Determine commission percent from settings (fallback to 10%)
+      let commissionPercent = 10;
+      try {
+        const settingsRef = doc(db, 'settings', 'site');
+        const settingsSnap = await getDoc(settingsRef);
+        if (settingsSnap.exists()) {
+          const s: any = settingsSnap.data();
+          if (typeof s.commissionPercent === 'number') commissionPercent = s.commissionPercent;
+        }
+      } catch (e) {
+        console.warn('Failed to fetch settings, using default commission', e);
+      }
+
+      const commission = Math.round((booking.totalAmount * (commissionPercent / 100)) * 100) / 100;
+      const providerAmount = Math.round((booking.totalAmount - commission) * 100) / 100;
+
+      // 3. Credit provider wallet with providerAmount and reduce pending
       await updateDoc(doc(db, 'wallets', booking.providerId), {
         pendingBalance: increment(-booking.totalAmount),
-        balance: increment(booking.totalAmount),
-        totalEarned: increment(booking.totalAmount),
+        balance: increment(providerAmount),
+        totalEarned: increment(providerAmount),
         updatedAt: new Date().toISOString()
       });
+
+      // 4. Credit admin wallet with commission (find first admin user)
+      try {
+        const q = query(collection(db, 'users'), where('role', '==', 'admin'), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const adminUid = snap.docs[0].id;
+          // ensure admin wallet exists (wallet doc id is user id)
+          await updateDoc(doc(db, 'wallets', adminUid), {
+            balance: increment(commission),
+            totalEarned: increment(commission),
+            updatedAt: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to credit admin wallet for commission', e);
+      }
 
       alert('Work approved and funds released!');
     } catch (err) {

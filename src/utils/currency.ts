@@ -1,6 +1,9 @@
 export const CURRENCY_RATES: Record<string, number> = {
   // All amounts in GBP
-  GBP: 1
+  GBP: 1,
+  // Approximate PKR -> GBP conversion rate (used to convert PKR amounts into GBP for display)
+  // Keep this value conservative; consider replacing with a live rates API for production.
+  PKR: 0.0038
 };
 
 export function formatCurrency(amount: number | string | null | undefined, currency = 'GBP') {

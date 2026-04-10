@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, query, where, onSnapshot, addDoc, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, orderBy, limit, doc, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { Send, User, Search, Phone, Video, Info } from 'lucide-react';
@@ -14,6 +14,7 @@ export const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [adminId, setAdminId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,6 +44,20 @@ export const Messages = () => {
     });
 
     return () => unsubscribe();
+  }, [user]);
+
+  // Fetch first admin user so people can contact admin directly
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const q = query(collection(db, 'users'), where('role', '==', 'admin'), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) setAdminId(snap.docs[0].id);
+      } catch (err) {
+        console.error('Failed to find admin user', err);
+      }
+    })();
   }, [user]);
 
   useEffect(() => {
@@ -98,6 +113,9 @@ export const Messages = () => {
         <div className="w-80 border-r border-black/5 flex flex-col">
           <div className="p-6 border-b border-black/5">
             <h2 className="text-xl font-bold text-zinc-900 mb-4">Messages</h2>
+            <div className="flex items-center gap-3 mb-3">
+              <button onClick={() => adminId && setSelectedChat({ id: adminId, lastMessage: '' })} disabled={!adminId} className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded text-sm">Contact Admin</button>
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
               <input 

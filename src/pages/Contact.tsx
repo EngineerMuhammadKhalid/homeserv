@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export const Contact = () => {
   const [name, setName] = useState('');
@@ -7,8 +9,22 @@ export const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Thank you — message received.');
-    setName(''); setEmail(''); setMessage('');
+    (async () => {
+      try {
+        await addDoc(collection(db, 'feedback'), {
+          name,
+          email,
+          message,
+          read: false,
+          createdAt: new Date().toISOString()
+        });
+        alert('Thank you — message received.');
+        setName(''); setEmail(''); setMessage('');
+      } catch (err) {
+        console.error('Failed to send feedback', err);
+        alert('Failed to send message. Please try again later.');
+      }
+    })();
   };
 
   return (

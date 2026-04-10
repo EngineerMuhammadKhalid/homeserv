@@ -8,11 +8,13 @@ import { motion } from 'motion/react';
 export const AdminPanel = () => {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'providers' | 'disputes' | 'reports' | 'categories' | 'verifications' | 'complaints' | 'system'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'providers' | 'disputes' | 'reports' | 'categories' | 'verifications' | 'complaints' | 'system' | 'feedback'>('overview');
   const [users, setUsers] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [verifications, setVerifications] = useState<any[]>([]);
+  const [feedbackList, setFeedbackList] = useState<any[]>([]);
   // Do not fetch or expose bookings list to admins here to protect user privacy
   // Admin can still act on disputes/reports which reference bookings when necessary
   // const [bookings, setBookings] = useState<any[]>([]);
@@ -39,6 +41,14 @@ export const AdminPanel = () => {
 
         const verifSnap = await getDocs(collection(db, 'verifications'));
         setVerifications(verifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // feedback
+        try {
+          const feedbackSnap = await getDocs(collection(db, 'feedback'));
+          setFeedbackList(feedbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (e) {
+          // ignore if missing
+        }
 
         // load site settings (if present)
         try {
@@ -144,6 +154,7 @@ export const AdminPanel = () => {
           <AdminTab active={activeTab === 'providers'} onClick={() => setActiveTab('providers')} icon={<ShieldCheck size={18} />} label="Provider Verification" />
           <AdminTab active={activeTab === 'verifications'} onClick={() => setActiveTab('verifications')} icon={<ShieldCheck size={18} />} label="Verifications" />
           <AdminTab active={activeTab === 'disputes'} onClick={() => setActiveTab('disputes')} icon={<AlertCircle size={18} />} label="Dispute Resolution" />
+          <AdminTab active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} icon={<AlertCircle size={18} />} label="Feedback" />
           <AdminTab active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} icon={<ShieldAlert size={18} />} label="User Reports" />
           <AdminTab active={activeTab === 'complaints'} onClick={() => setActiveTab('complaints')} icon={<AlertCircle size={18} />} label="Complaints" />
           <AdminTab active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} icon={<Settings size={18} />} label="System Settings" />
@@ -335,6 +346,36 @@ export const AdminPanel = () => {
                           </button>
                         </div>
                       )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'feedback' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-zinc-900">User Feedback</h3>
+              <div className="space-y-4">
+                {feedbackList.length === 0 ? (
+                  <div className="text-center py-10 text-zinc-400">No feedback submitted yet.</div>
+                ) : (
+                  feedbackList.map(f => (
+                    <div key={f.id} className="p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="font-bold text-zinc-900">{f.name || 'Anonymous'}</p>
+                          <p className="text-xs text-zinc-500">{f.email || 'No email provided'}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${f.read ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {f.read ? 'Read' : 'New'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-700 mb-4">{f.message}</p>
+                      <div className="flex gap-3">
+                        <button onClick={async () => { try { await updateDoc(doc(db, 'feedback', f.id), { read: true }); setFeedbackList(prev => prev.map(x => x.id === f.id ? { ...x, read: true } : x)); } catch (e) { console.error(e); } }} className="bg-emerald-600 text-white py-2 px-4 rounded-xl">Mark Read</button>
+                        <a href={`mailto:${f.email}`} className="bg-zinc-50 px-4 py-2 rounded-xl border">Reply</a>
+                      </div>
                     </div>
                   ))
                 )}

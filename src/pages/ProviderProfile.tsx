@@ -426,10 +426,18 @@ export const ProviderProfile = () => {
                     sx={{ borderRadius: 3 }}
                   >
                     <MenuItem value="">Choose a slot</MenuItem>
-                    <MenuItem value="09:00 AM">09:00 AM</MenuItem>
-                    <MenuItem value="11:00 AM">11:00 AM</MenuItem>
-                    <MenuItem value="02:00 PM">02:00 PM</MenuItem>
-                    <MenuItem value="04:00 PM">04:00 PM</MenuItem>
+                    {(() => {
+                      // Generate hourly slots from 08:00 to 18:00
+                      const slots: string[] = [];
+                      for (let h = 8; h <= 18; h++) {
+                        const date = new Date();
+                        date.setHours(h, 0, 0, 0);
+                        const hour = date.getHours() % 12 || 12;
+                        const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+                        slots.push(`${hour.toString().padStart(2, '0')}:00 ${ampm}`);
+                      }
+                      return slots.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>);
+                    })()}
                   </Select>
                 </FormControl>
 
