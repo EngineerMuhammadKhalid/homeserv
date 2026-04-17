@@ -1,0 +1,207 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "softengr.ks@gmail.com");
+    }
+    
+    // Validator Functions
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'role']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             (!('username' in data) || (data.username is string && data.username.size() >= 3 && data.username.size() <= 30)) &&
+             data.email is string && data.role in ['customer', 'provider', 'admin'];
+    }
+    
+    function isValidService(data) {
+      return data.keys().hasAll(['title', 'description', 'category', 'price', 'providerId']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.price is number && data.price >= 0 &&
+             data.providerId == request.auth.uid;
+    }
+
+    function isValidServiceProvider(data) {
+      return data.keys().hasAll(['userId', 'hourlyRate', 'categories']) &&
+             data.userId == request.auth.uid &&
+             data.hourlyRate is number && data.hourlyRate >= 0 &&
+             data.categories is list;
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['customerId', 'providerId', 'serviceId', 'bookingDate', 'status']) &&
+             data.status in ['pending', 'accepted', 'rejected', 'completed', 'cancelled', 'disputed', 'revision_requested'] &&
+             data.customerId != data.providerId;
+    }
+
+    function canUpdateBooking(data, existingData) {
+      return isAuthenticated() && (
+        request.auth.uid == existingData.customerId || 
+        request.auth.uid == existingData.providerId || 
+        isAdmin()
+      );
+    }
+
+    function isValidInvoice(data) {
+      return data.keys().hasAll(['bookingId', 'customerId', 'providerId', 'amount', 'status']) &&
+             data.amount is number && data.amount >= 0 &&
+             data.status in ['pending', 'paid', 'cancelled'];
+    }
+
+    function isValidPayment(data) {
+      return data.keys().hasAll(['invoiceId', 'customerId', 'providerId', 'amount', 'method', 'status']) &&
+             data.amount is number && data.amount >= 0 &&
+             data.method in ['card', 'easypaisa', 'jazzcash', 'bank', 'wallet'] &&
+             data.status in ['success', 'failed', 'pending'];
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderId', 'receiverId', 'content', 'participants']) &&
+             data.senderId == request.auth.uid &&
+             data.participants is list &&
+             request.auth.uid in data.participants &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 5000;
+    }
+
+    function isValidWithdrawalRequest(data) {
+      return data.keys().hasAll(['userId', 'amount', 'method', 'details', 'status']) &&
+             data.userId == request.auth.uid &&
+             data.amount is number && data.amount > 0 &&
+             data.method in ['easypaisa', 'jazzcash', 'bank', 'wallet'] &&
+             data.status == 'pending';
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) || isAdmin();
+      // Owners may update their profile
+      allow update: if isOwner(userId) || isAdmin();
+    }
+
+    // Service Providers
+    match /service_providers/{providerId} {
+      allow read: if true;
+      allow create: if (isOwner(providerId) && isValidServiceProvider(request.resource.data)) || isAdmin();
+      // Owners may update provider details but cannot set verificationStatus to 'verified' (only admins can)
+      allow update: if ((isOwner(providerId) && isValidServiceProvider(request.resource.data) && !(request.resource.data.verificationStatus == 'verified' && !isAdmin())) || isAdmin());
+    }
+
+    // Services
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && (isAdmin() || isValidService(request.resource.data));
+      allow update: if isAuthenticated() && (isAdmin() || (resource.data.providerId == request.auth.uid && isValidService(request.resource.data)));
+      allow delete: if isAuthenticated() && (isAdmin() || resource.data.providerId == request.auth.uid);
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.customerId || 
+        request.auth.uid == resource.data.providerId || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid && isValidBooking(request.resource.data);
+      allow update: if canUpdateBooking(request.resource.data, resource.data) && isValidBooking(request.resource.data);
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.customerId || isAdmin());
+    }
+
+    // Messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid in resource.data.get('participants', []) ||
+        request.auth.uid == resource.data.get('senderId', '') || 
+        request.auth.uid == resource.data.get('receiverId', '') ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && isValidMessage(request.resource.data);
+    }
+
+    // Invoices
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.customerId || 
+        request.auth.uid == resource.data.providerId || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.providerId == request.auth.uid && isValidInvoice(request.resource.data);
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.customerId || 
+        request.auth.uid == resource.data.providerId || 
+        isAdmin()
+      ) && isValidInvoice(request.resource.data);
+    }
+
+    // Payments
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.customerId || 
+        request.auth.uid == resource.data.providerId || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid && isValidPayment(request.resource.data);
+    }
+
+    // Disputes
+    match /disputes/{disputeId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.raisedBy || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+    }
+
+    // Wallets
+    match /wallets/{walletId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAdmin();
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // Withdrawal Requests
+    match /withdrawal_requests/{requestId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && isValidWithdrawalRequest(request.resource.data);
+      allow update: if isAdmin();
+    }
+
+    // Verifications
+    match /verifications/{verifId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      // Users may create their own verification request; documents must be an array of urls and initial status must be 'pending'
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.documentUrl is list;
+      // Only admins can update verification records (approve/reject)
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Admin actions log
+    match /admin_actions/{actionId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}

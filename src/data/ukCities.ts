@@ -1,0 +1,21 @@
+export const UK_CITIES = [
+  'London',
+  'Birmingham',
+  'Manchester',
+  'Leeds',
+  'Glasgow',
+  'Sheffield',
+  'Bradford',
+  'Liverpool',
+  'Edinburgh',
+  'Bristol',
+  'Cardiff',
+  'Coventry',
+  'Leicester',
+  'Kingston upon Hull',
+  'Stoke-on-Trent',
+  'Wolverhampton',
+  'Nottingham',
+  'Plymouth',
+  'Southampton'
+];
